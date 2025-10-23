@@ -13,7 +13,7 @@ This project explores what it might have been like if the mobile technology of t
 - **🖼️ Image Analysis (Vision):** Attach photos from the Gallery to your messages or ChatGPT conversations. The AI can analyze and respond to the content of the images.
 - **👤 AI Personalities:** A collection of distinct AI profiles, each with a unique personality, prompt, and voice, managed through `.ini` files.
 - **📸 Camera & Gallery:** A retro-style camera app to take "photos" (processed webcam feed) and a gallery to view and manage them.
-- **👾 DOOM Easter Egg:** A fully functional, monochrome version of DOOM is hidden within the OS, complete with save/load functionality via IndexedDB.
+- **👾 It can run DOOM:** A fully functional, monochrome (grayscale 1) version of DOOM is included, complete with save/load functionality via IndexedDB.
 - **🔐 Secure API Key Management:** API keys are never stored in plain text. They are encrypted with a user-defined PIN and stored securely in IndexedDB. A session-only option is also available.
 - **💰 Cost Tracking:** The application tracks the estimated cost of OpenAI API usage (text, voice, and vision) and displays it in the system information panel.
 - **⌨️ T9 Predictive Text Input:** A fully implemented T9 input system with a custom dictionary, word completion, and multi-language support (English & Hungarian).
@@ -116,3 +116,4 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
