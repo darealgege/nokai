@@ -18,6 +18,8 @@ This project explores what it might have been like if the mobile technology of t
 - **💰 Cost Tracking:** The application tracks the estimated cost of OpenAI API usage (text, voice, and vision) and displays it in the system information panel.
 - **⌨️ T9 Predictive Text Input:** A fully implemented T9 input system with a custom dictionary, word completion, and multi-language support (English & Hungarian).
 
+[![PayPal Donate Button](https://hungaryvfr.hu/images/paypal-donate-button-2.png)](https://www.paypal.com/ncp/payment/KUM7TUZW4CNPN)
+
 ## 🔧 How It Works
 
 The project is built with a vanilla JavaScript frontend and a PHP backend that acts as a secure proxy for various APIs.
@@ -116,4 +118,5 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
