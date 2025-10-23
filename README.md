@@ -18,6 +18,8 @@ This project explores what it might have been like if the mobile technology of t
 - **💰 Cost Tracking:** The application tracks the estimated cost of OpenAI API usage (text, voice, and vision) and displays it in the system information panel.
 - **⌨️ T9 Predictive Text Input:** A fully implemented T9 input system with a custom dictionary, word completion, and multi-language support (English & Hungarian).
 
+## 🖼️ Screenshots
+
 [NOKAI Phone main screen](https://hungaryvfr.hu/images/nokai/1-main_screen.png)
 
 [NOKAI Phone Contacts screen](https://hungaryvfr.hu/images/nokai/2-contacts.png)
@@ -138,6 +140,7 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
 
 
