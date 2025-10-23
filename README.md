@@ -1,11 +1,4 @@
-Of course! Here is a comprehensive `README.md` file for your project, written in English, based on the provided source code. You can copy and paste this directly into your GitHub repository.
-
----
-
 # Nokai - The Retro AI Phone Simulator
-
- 
-> *Suggestion: Replace the link above with a screenshot or GIF of your running application!*
 
 **Nokai** is a web-based project that merges the user interface of a classic feature phone with the power of modern artificial intelligence. The simulator emulates a complete mobile OS with its own applications, settings, and unique features, all presented on a nostalgic, monochrome green display.
 
@@ -120,5 +113,6 @@ Follow these steps to set up and run the project locally.
 ## 📄 License
 
 This project is open-source and available under the [MIT License](LICENSE).
+
 
 ---
