@@ -18,6 +18,26 @@ This project explores what it might have been like if the mobile technology of t
 - **💰 Cost Tracking:** The application tracks the estimated cost of OpenAI API usage (text, voice, and vision) and displays it in the system information panel.
 - **⌨️ T9 Predictive Text Input:** A fully implemented T9 input system with a custom dictionary, word completion, and multi-language support (English & Hungarian).
 
+[NOKAI Phone main screen](https://hungaryvfr.hu/images/nokai/1-main_screen.png)
+
+[NOKAI Phone Contacts screen](https://hungaryvfr.hu/images/nokai/2-contacts.png)
+
+[NOKAI Phone In-Call screen](https://hungaryvfr.hu/images/nokai/3-in_call.png)
+
+[NOKAI Phone Call History screen](https://hungaryvfr.hu/images/nokai/4-call_history.png)
+
+[NOKAI Phone Call History Transcript screen](https://hungaryvfr.hu/images/nokai/5-history_transcript.png)
+
+[NOKAI Phone Messages (SMS/MMS) screen](https://hungaryvfr.hu/images/nokai/6-messages.png)
+
+[NOKAI Phone Messages screen - a reply from Penny AI profile](https://hungaryvfr.hu/images/nokai/7-messages_penny_reply.png)
+
+[NOKAI Phone Messages - Options](https://hungaryvfr.hu/images/nokai/8-messages_options.png)
+
+[NOKAI Phone ChatGPT app](https://hungaryvfr.hu/images/nokai/9_chatgpt_app.png)
+
+[NOKAI Phone DOOM](https://hungaryvfr.hu/images/nokai/10_doom.png)
+
 [![PayPal Donate Button](https://hungaryvfr.hu/images/paypal-donate-button-2.png)](https://www.paypal.com/ncp/payment/KUM7TUZW4CNPN)
 
 ## 🔧 How It Works
@@ -118,5 +138,6 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
 
