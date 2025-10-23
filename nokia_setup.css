@@ -1,0 +1,209 @@
+/* nokia_setup.css */
+
+.setup-container, .pin-screen {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background: #9db891; */
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    font-family: sans-serif;
+    color: #1a3a1a;
+}
+
+.setup-title, .pin-title {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #1a3a1a;
+    flex-shrink: 0;
+}
+
+.setup-content {
+    flex-grow: 1;
+    padding: 10px 2px;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-y: auto;
+    /* ✅ ÚJ: Extra tér a lista alján a jobb görgetésért */
+    padding-bottom: 10px; 
+}
+
+.pin-content {
+    flex-grow: 1;
+    padding: 2px 2px;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-y: auto;
+    /* ✅ JAVÍTÁS: Flexbox a tökéletes középre igazításhoz */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ✅ JAVÍTÁS: A PIN kijelző teljes újraformázása */
+.pin-display {
+    font-family: 'Courier New', monospace;
+    font-size: 36px;
+    letter-spacing: 8px;
+    margin: 15px 0;
+    padding: 5px 10px;
+    border: 1px solid #1a3a1a;
+    /* background: rgba(255, 255, 255, 0.3); */
+    background: rgb(165 203 170 / 64%);
+    min-height: 63px;
+    text-align: center;
+    min-width: 200px;
+    text-shadow: 0px 1px 1px grey;
+}
+
+/* ✅ ÚJ: Vékony scrollbar stílus */
+.setup-content::-webkit-scrollbar, .pin-content::-webkit-scrollbar {
+    width: 4px;
+}
+.setup-content::-webkit-scrollbar-thumb, .pin-content::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.4);
+    border-radius: 2px;
+}
+
+.setup-content p {
+    margin-bottom: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* --- Új, egyedi "űrlap" elemek --- */
+
+.setup-form-item {
+    margin-bottom: 12px;
+    padding: 4px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+.setup-form-item.selected {
+    border-color: #1a3a1a;
+    background-color: rgba(26, 58, 26, 0.1);
+}
+
+.setup-label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: block;
+    font-size: 10px;
+}
+
+/* Egyedi szövegbeviteli mező */
+.setup-input-display {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid #1a3a1a;
+    padding: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #1a3a1a;
+    min-height: 40px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border-radius: 2px;
+    position: relative;
+}
+
+.setup-form-item.selected .setup-input-display {
+    background: rgba(255, 255, 255, 0.4); /* Enyhén világosabb, de nem fehér */
+}
+
+.setup-input-display .cursor {
+    display: inline-block;
+    width: 6px;
+    height: 10px;
+    background: #1a3a1a;
+    animation: blink 1s step-end infinite;
+    margin-left: 1px;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Egyedi checkbox */
+.setup-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.setup-checkbox-box {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #1a3a1a;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.setup-checkbox-box::after {
+    content: '✓';
+    font-size: 14px;
+    font-weight: bold;
+    color: #1a3a1a;
+    opacity: 0; /* Alapból rejtett */
+}
+
+.setup-checkbox-item.checked .setup-checkbox-box::after {
+    opacity: 1; /* Pipa megjelenítése */
+}
+
+.setup-footer, .pin-footer {
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+    padding-top: 8px;
+    border-top: 1px solid #1a3a1a;
+}
+
+.paste-catcher-textarea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* Teljesen átlátszóvá tesszük */
+    background: transparent;
+    color: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    opacity: 0;
+
+    /* Eltünteti a villogó kurzort (caret) a legtöbb böngészőben */
+    caret-color: transparent;
+
+    /* Alapból nem reagál az egér/érintés eseményekre */
+    pointer-events: none;
+}
+
+/* Amikor a mező szerkesztési módban van, a textarea-t "kattinthatóvá" tesszük,
+   hogy a mobil OS fel tudja ajánlani a "Beillesztés" opciót. */
+.setup-form-item.selected.editing .paste-catcher-textarea {
+    pointer-events: auto;
+}
+
+.setup-content a {
+    color: #1a3a1a; /* Ugyanaz a szín, mint a többi szövegé */
+    text-decoration: underline; /* Hagyományos aláhúzás */
+    cursor: pointer; /* Jelzi, hogy kattintható */
+}
+
+.setup-content a:visited {
+    color: #1a3a1a; /* A már meglátogatott link színe is maradjon ugyanaz */
+}

@@ -1,0 +1,14 @@
+{
+  "text_models": {
+    "gpt-4.1": { "input": 2.00, "output": 8.00, "unit": "per_1m_tokens" },
+    "gpt-4.1-mini": { "input": 0.40, "output": 1.60, "unit": "per_1m_tokens" },
+    "gpt-4.1-nano": { "input": 0.10, "output": 0.40, "unit": "per_1m_tokens" }
+  },
+  "voice_models": {
+    "gpt-realtime-mini": { "cost": 0.024, "unit": "per_minute" },
+    "gpt-realtime": { "cost": 0.048, "unit": "per_minute" }
+  },
+  "vision_models": {
+    "gpt-4.1-nano": { "input": 0.10, "output": 0.40, "image_cost": 0.00145, "unit": "per_1m_tokens" }
+  }
+}
