@@ -1927,7 +1927,7 @@ button,
     transform: translate(-50%, -50%);
     width: 75%;
     background: #9db891; /* Nokia zöld */
-    border: 2px solid #1a3a1a;
+    border: 1px solid #1a3a1a;
     padding: 12px;
     z-index: 250; /* Még magasabb, mint a details menu */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
