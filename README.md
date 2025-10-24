@@ -79,7 +79,7 @@ Follow these steps to set up and run the project locally.
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-username/nokai.git
+    git clone https://github.com/darealgege/nokai.git
     cd nokai
     ```
 
@@ -144,6 +144,7 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
 
 
