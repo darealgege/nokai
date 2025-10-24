@@ -18,6 +18,10 @@ This project explores what it might have been like if the mobile technology of t
 - **💰 Cost Tracking:** The application tracks the estimated cost of OpenAI API usage (text, voice, and vision) and displays it in the system information panel.
 - **⌨️ T9 Predictive Text Input:** A fully implemented T9 input system with a custom dictionary, word completion, and multi-language support (English & Hungarian).
 
+## 🎞️ YouTube
+
+[![Nokai - Retro AI Phone Simulator Demo](https://img.youtube.com/vi/jRszWA2AA48/hqdefault.jpg)](https://www.youtube.com/watch?v=jRszWA2AA48 "Nokai - Retro AI Phone Simulator Demo")
+
 ## 🖼️ Screenshots
 
 [NOKAI Phone main screen](https://hungaryvfr.hu/images/nokai/1-main_screen.png)
@@ -140,6 +144,7 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
 
 
