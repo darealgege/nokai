@@ -72,7 +72,7 @@ class SuperSteveGame {
         
         // Pause menu
         this.pauseMenuIndex = 0;
-        this.pauseMenuItems = ['Resume Game', 'View Scores', 'Quit Game'];
+        this.pauseMenuItems = ['Resume Game', 'Music Off', 'View Scores', 'Quit Game'];
         
         // Game Over menu
         this.gameOverMenuIndex = 0;
@@ -102,6 +102,9 @@ class SuperSteveGame {
         this.levelGenerator = null;
         this.renderer = null;
         
+        // 🎵 Audio system
+        this.audio = new SuperSteveAudio();
+        
         // ✨ Metro system
         this.metroSystem = null;
         
@@ -118,6 +121,10 @@ class SuperSteveGame {
         this.active = true;
         this.gameOver = false;
         this.paused = false;
+        
+        // 🎵 Initialize and start audio
+        this.audio.init();
+        this.audio.startBackgroundMusic();
         
         // ✨ JAVÍTÁS: Játékállapot nullázása minden aktiváláskor ✨
         // Ez biztosítja, hogy minden új játék tiszta lappal induljon.
@@ -176,6 +183,9 @@ class SuperSteveGame {
         console.log('🎮 Super Steve Game Deactivated!');
         this.active = false;
         this.paused = false;
+        
+        // 🎵 Stop audio
+        this.audio.stopBackgroundMusic();
         
         if (this.gameLoopInterval) {
             clearInterval(this.gameLoopInterval);
@@ -378,6 +388,11 @@ class SuperSteveGame {
                     if (this.pauseMenuIndex === 0) {
                         this.togglePause();
                     } else if (this.pauseMenuIndex === 1) {
+                        // 🎵 Music On/Off toggle (only music, not SFX!)
+                        const isMusicMuted = this.audio.toggleMusicMute();
+                        this.pauseMenuItems[1] = isMusicMuted ? 'Music On' : 'Music Off';
+                        this.draw();
+                    } else if (this.pauseMenuIndex === 2) {
                         this.viewingScores = true;
                         this.draw();
                     } else {
@@ -481,6 +496,11 @@ class SuperSteveGame {
         this.gameOver = false;
         this.paused = false;
         this.viewingScores = false;
+        
+        // 🎵 Restart music after game over
+        if (!this.audio.muted) {
+            this.audio.startBackgroundMusic();
+        }
         
         // ✨ JAVÍTÁS: Állapotok teljes visszaállítása ✨
         this.gameState.level = 1;
@@ -592,6 +612,7 @@ class SuperSteveGame {
         // Jump
         if (this.keys.up && !this.player.isJumping) {
             this.player.jump();
+            this.audio.playJump(); // 🔊 Jump sound
         }
 
         // Update player
@@ -599,7 +620,12 @@ class SuperSteveGame {
 
         // ✨ FIXED: Update animation using sprite manager
         if (this.spriteManager) {
-            this.spriteManager.updateAnimation(this.player);
+            const animResult = this.spriteManager.updateAnimation(this.player);
+            
+            // 👟 Lépéshang lejátszása walk animáció frame váltásnál
+            if (animResult && animResult.stepOccurred) {
+                this.audio.playStep();
+            }
         }
 
         // Platform collision
@@ -622,10 +648,13 @@ class SuperSteveGame {
                     this.createParticles(coin.x, coin.y, '#FFD700', '✨');
                     
                     if (coin.isGoal) {
+                        this.audio.playLevelComplete(); // 🎵 Level complete jingle
                         setTimeout(() => {
                             this.gameState.level++;
                             this.loadLevel(this.gameState.level);
                         }, 500);
+                    } else {
+                        this.audio.playCoin(); // 🔊 Coin sound
                     }
                 }
             }
@@ -668,6 +697,7 @@ class SuperSteveGame {
                     enemy.squashTime = 0;
                     this.player.bounceOffEnemy();
                     this.gameState.score += 50;
+                    this.audio.playEnemyDefeat(); // 🔊 Enemy defeat sound
                     
                     this.createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.type.color, '💥');
                 } else {
@@ -695,6 +725,7 @@ class SuperSteveGame {
                     
                     // Pontszám növelése
                     this.gameState.score += 25;
+                    this.audio.playBonus(); // 🔊 Bonus sound
                     
                     // Részecske-effekt létrehozása a helyes emojival
                     this.createParticles(particleX, particleY, '#00FFFF', obstacle.type.emoji);
@@ -747,6 +778,8 @@ class SuperSteveGame {
         
         if (gameOver) {
             this.handleGameOver();
+        } else {
+            this.audio.playLifeLost(); // 🔊 Life lost sound
         }
     }
     
@@ -862,6 +895,14 @@ class SuperSteveGame {
     togglePause() {        
         this.paused = !this.paused;
         this.pauseMenuIndex = 0;
+        
+        // 🎵 Pause/Resume music
+        if (this.paused) {
+            this.audio.stopBackgroundMusic();
+        } else {
+            this.audio.startBackgroundMusic();
+        }
+        
         this.draw();
         console.log(`🎮 Game ${this.paused ? 'paused' : 'resumed'}`);
     }
@@ -870,6 +911,7 @@ class SuperSteveGame {
         this.gameOver = true;
         this.gameOverMenuIndex = 0;
         
+        this.audio.playGameOver(); // 🎵 Game over theme
         this.saveScore(this.gameState.score);
         
         this.draw();

@@ -138,7 +138,7 @@ class SuperSteveSprites {
     }
     
     updateAnimation(player) {
-        if (!this.allLoaded) return;
+        if (!this.allLoaded) return null;
         
         const currentSpriteType = this.getCurrentSpriteType(player);
         const currentSprite = this.sprites[currentSpriteType];
@@ -151,15 +151,25 @@ class SuperSteveSprites {
         }
         
         // Csak a több képkockás sprite-okat animáljuk
-        if (currentSprite.frames <= 1) return;
+        if (currentSprite.frames <= 1) return null;
         
         // Animációs számláló növelése
         this.animationCounter++;
         
+        let stepOccurred = false;
+        
         if (this.animationCounter >= this.animationSpeed) {
             this.animationCounter = 0;
+            const oldFrame = currentSprite.currentFrame;
             currentSprite.currentFrame = (currentSprite.currentFrame + 1) % currentSprite.frames;
+            
+            // 👟 Lépéshang jelzése walk animációnál
+            if (currentSpriteType === 'walk' && oldFrame !== currentSprite.currentFrame) {
+                stepOccurred = true;
+            }
         }
+        
+        return { stepOccurred: stepOccurred, spriteType: currentSpriteType };
     }
     
     // ✨ JAVÍTVA: Új segédfüggvény a képkocka X és Y pozíciójának kiszámítására
