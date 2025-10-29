@@ -166,22 +166,30 @@ class NokiaGallery {
         const screen = document.querySelector('.screen');
         
         if (this.isFullscreen) {
-            // ✅ Fullscreen: Position relative to .screen, not .gallery-container
-            const screenRect = screen.getBoundingClientRect();
+            // ✅ Fullscreen: Move container to top and fill entire screen
+            this.container.style.top = '0'; // Fill from top (over status bar area)
             
-            viewer.style.position = 'fixed';
-            viewer.style.top = screenRect.top + 'px';
-            viewer.style.left = screenRect.left + 'px';
-            viewer.style.width = screenRect.width + 'px';
-            viewer.style.height = screenRect.height + 'px';
+            viewer.style.position = 'absolute';
+            viewer.style.top = '0';
+            viewer.style.left = '0';
+            viewer.style.right = '0';
+            viewer.style.bottom = '0';
+            viewer.style.width = 'auto';
+            viewer.style.height = 'auto';
             viewer.style.zIndex = '500';
-            viewer.style.background = '#000';
+            viewer.style.background = '#1a3a1a'; // Sötét zöld háttér
+            viewer.style.display = 'flex';
+            viewer.style.alignItems = 'center';
+            viewer.style.justifyContent = 'center';
+            viewer.style.borderRadius = '0'; // Remove border radius in fullscreen
             
             if (info) info.style.display = 'none';
             if (hint) hint.style.display = 'none';
             if (statusBar) statusBar.style.display = 'none';
         } else {
             // ✅ Normal: restore original layout
+            this.container.style.top = '20px'; // Back to position after status bar
+            
             viewer.style.position = '';
             viewer.style.top = '';
             viewer.style.left = '';
@@ -191,6 +199,10 @@ class NokiaGallery {
             viewer.style.bottom = '';
             viewer.style.zIndex = '';
             viewer.style.background = '';
+            viewer.style.display = '';
+            viewer.style.alignItems = '';
+            viewer.style.justifyContent = '';
+            viewer.style.borderRadius = '';
             
             if (info) info.style.display = 'flex';
             if (hint) hint.style.display = 'block';

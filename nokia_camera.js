@@ -22,7 +22,8 @@ class NokiaCamera {
         this.settingsOpen = false;
         this.settingsIndex = 0;
         this.settingsItems = [];
-        
+        this.gridlines = false; 
+
         // Filter settings based on quality
         this.updateFilterSettings();
         
@@ -281,7 +282,7 @@ class NokiaCamera {
             const dy = Math.round((this.displayCanvas.height - outH) / 2);
             
             this.displayCtx.drawImage(this.offCanvas, 0, 0, this.offCanvas.width, this.offCanvas.height, dx, dy, outW, outH);
-            
+
             if (this.scanlines) {
                 const lineH = Math.max(1, Math.round(scale / 4));
                 this.displayCtx.fillStyle = 'rgba(0,0,0,0.08)';
@@ -289,7 +290,39 @@ class NokiaCamera {
                     this.displayCtx.fillRect(dx, y, outW, lineH);
                 }
             }
-            
+
+             if (this.gridlines) {
+                // A vonalak útvonalának definiálása egyszer
+                this.displayCtx.beginPath();
+                
+                const x1 = Math.round(dx + outW / 3);
+                const x2 = Math.round(dx + outW * 2 / 3);
+                const y1 = Math.round(dy + outH / 3);
+                const y2 = Math.round(dy + outH * 2 / 3);
+                
+                // Vertikális vonalak
+                this.displayCtx.moveTo(x1, dy);
+                this.displayCtx.lineTo(x1, dy + outH);
+                this.displayCtx.moveTo(x2, dy);
+                this.displayCtx.lineTo(x2, dy + outH);
+                
+                // Horizontális vonalak
+                this.displayCtx.moveTo(dx, y1);
+                this.displayCtx.lineTo(dx + outW, y1);
+                this.displayCtx.moveTo(dx, y2);
+                this.displayCtx.lineTo(dx + outW, y2);
+
+                // 1. LÉPÉS: A sötét, vastagabb "kontúr" megrajzolása
+                this.displayCtx.strokeStyle = 'rgba(143, 150, 46, 0.3)'; // Sötétzöld árnyék
+                this.displayCtx.lineWidth = 3; // Legyen vastagabb, mint a fő vonal
+                this.displayCtx.stroke();
+
+                // 2. LÉPÉS: A világos, vékony fő vonal megrajzolása a kontúr tetejére
+                this.displayCtx.strokeStyle = 'rgba(201, 221, 17, 0.3)'; // Világosabb vonal, erősebb láthatósággal
+                this.displayCtx.lineWidth = 1; // Az általad preferált vastagság
+                this.displayCtx.stroke();
+            }         
+
             if (this.grain) {
                 this.displayCtx.globalAlpha = 0.06;
                 for (let i = 0; i < 100; i++) {
@@ -398,8 +431,54 @@ class NokiaCamera {
             return;
         }
         playShutter();
-        //const retroImage = this.displayCanvas.toDataURL('image/png');
-        const retroImage = this.displayCanvas.toDataURL('image/jpeg', 0.65);
+          // 1. Létrehozunk egy új, memóriában létező vásznat, ami pont akkora, mint a látható vászon.
+        const captureCanvas = document.createElement('canvas');
+        captureCanvas.width = this.displayCanvas.width;
+        captureCanvas.height = this.displayCanvas.height;
+        const captureCtx = captureCanvas.getContext('2d');
+        captureCtx.imageSmoothingEnabled = false;
+
+        // 2. Lemásoljuk a `drawFrame` függvény rajzolási logikáját, de a segédrácsot kihagyjuk.
+        
+        // Ugyanazokat a méretezési változókat használjuk, mint a `drawFrame`-ben
+        const scaleX = this.displayCanvas.width / this.offCanvas.width;
+        const scaleY = this.displayCanvas.height / this.offCanvas.height;
+        const scale = Math.min(scaleX, scaleY);
+        const outW = Math.round(this.offCanvas.width * scale);
+        const outH = Math.round(this.offCanvas.height * scale);
+        const dx = Math.round((this.displayCanvas.width - outW) / 2);
+        const dy = Math.round((this.displayCanvas.height - outH) / 2);
+
+        // Fő kép kirajzolása az ideiglenes vászonra
+        captureCtx.drawImage(this.offCanvas, 0, 0, this.offCanvas.width, this.offCanvas.height, dx, dy, outW, outH);
+
+        // Scanlines effekt hozzáadása (ha be van kapcsolva)
+        if (this.scanlines) {
+            const lineH = Math.max(1, Math.round(scale / 4));
+            captureCtx.fillStyle = 'rgba(0,0,0,0.08)';
+            for (let y = dy; y < dy + outH; y += lineH * 2) {
+                captureCtx.fillRect(dx, y, outW, lineH);
+            }
+        }
+
+        // ❌ A SEGÉDRÁCS (GRIDLINES) RAJZOLÁSI RÉSZÉT ITT SZÁNDÉKOSAN KIHAGYJUK!
+
+        // Film Grain effekt hozzáadása (ha be van kapcsolva)
+        if (this.grain) {
+            captureCtx.globalAlpha = 0.06;
+            for (let i = 0; i < 100; i++) {
+                const gx = Math.random() * captureCanvas.width;
+                const gy = Math.random() * captureCanvas.height;
+                const s = Math.random() * 2;
+                const gcol = (Math.random() * 255) | 0;
+                captureCtx.fillStyle = `rgba(${gcol},${gcol},${gcol},1)`;
+                captureCtx.fillRect(gx, gy, s, s);
+            }
+            captureCtx.globalAlpha = 1;
+        }
+
+        // 3. Az ideiglenes, segédrács nélküli vászonról készítjük el a menteni kívánt képet.
+        const retroImage = captureCanvas.toDataURL('image/jpeg', 0.65);
         const fullCanvas = document.createElement('canvas');
         fullCanvas.width = this.rawVideo.videoWidth;
         fullCanvas.height = this.rawVideo.videoHeight;
@@ -462,6 +541,7 @@ class NokiaCamera {
         // Build settings items
         this.settingsItems = [
             { id: 'quality', icon: '📸', name: 'Quality', value: this.quality.toUpperCase() },
+            { id: 'gridlines', icon: '#️⃣', name: 'Gridlines', value: this.gridlines ? 'ON' : 'OFF' },
             { id: 'scanlines', icon: '📺', name: 'Scanlines', value: this.scanlines ? 'ON' : 'OFF' },
             { id: 'grain', icon: '🎞️', name: 'Film Grain', value: this.grain ? 'ON' : 'OFF' },
             { id: 'timer', icon: '⏱️', name: 'Timer', value: this.timer === 0 ? 'OFF' : `${this.timer}s` }
@@ -594,6 +674,12 @@ class NokiaCamera {
                 this.startCamera();
                 console.log('📸 Quality changed to:', this.quality);
                 break;
+             
+            case 'gridlines':
+                this.gridlines = !this.gridlines;
+                this.updateSettingsValue(this.settingsIndex, this.gridlines ? 'ON' : 'OFF');
+                console.log('▦ Gridlines:', this.gridlines);
+                break;    
                 
             case 'scanlines':
                 this.scanlines = !this.scanlines;

@@ -92,7 +92,7 @@ class MessagesBackgroundHandler {
      * Process AI response in the background
      */
     async processAIResponse(profileId, profileData) {
-        try {
+        try {            
             console.log(`🤖 Processing AI response for ${profileId}`);
             
             // ✅ Töltsük be a friss thread-et
@@ -140,17 +140,24 @@ class MessagesBackgroundHandler {
                 const weatherData = await getWeatherData();
                 
                 let systemPrompt = profile.prompt;
-                systemPrompt += `\n\nCurrent date and time is ${dateTimeString}.`;
+                systemPrompt += `\n\n[BACKGROUND INFO - Use ONLY if asked]\nCurrent date and time: ${dateTimeString}.`;
                 if (weatherData) {
-                    systemPrompt += ` ${weatherData}`;
+                    systemPrompt += `\n${weatherData}`;
                 }
-                systemPrompt += `\n\nCRITICAL RULES:\n1. LANGUAGE: ALWAYS respond in the exact same language as the last user message.\n2. FORMAT: Keep your responses concise and conversational, suitable for an SMS message on a small screen.`;
+                systemPrompt += `\n[END BACKGROUND INFO]`;
+                systemPrompt += `\n\nCRITICAL RULES:\n1. LANGUAGE: ALWAYS respond in the exact same language as the last user message.\n2. FORMAT: Keep your responses concise and conversational, suitable for an SMS message on a small screen.\n3. TIME/DATE: The current time is always fresh in the background info above. Only mention it if user explicitly asks.\n4. BACKGROUND INFO: Only mention weather/location/time if user explicitly asks. Do NOT volunteer this information.`;
                 
                 // Előzmények (text only, utolsó 10 üzenet)
                 const history = thread.messages.slice(-10).map(m => ({
                     role: m.role,
                     content: m.content
                 }));
+                
+                // ✅ ÚJ: Explicit időfrissítő üzenet hozzáadása a history végére
+                history.push({
+                    role: 'system',
+                    content: `[CRITICAL TIME UPDATE]\nCurrent date and time RIGHT NOW: ${dateTimeString}\nIMPORTANT: If user asks about current time, use THIS fresh value, NOT any previous time mentions.\n[END TIME UPDATE]`
+                });
                 
                 // Vision API hívás
                 // ✅ ÚJ: Kontextuális prompt készítése, mint a Messages Image Handler-ben
@@ -175,8 +182,15 @@ class MessagesBackgroundHandler {
                 console.log(`✅ Vision API response received`);
                 
             } else {
-                // ✅ NORMÁL TEXT API kép nélkül
-                const apiMessages = thread.messages.map(m => ({ role: m.role, content: m.content }));
+                 // ✅ UNIFIED HISTORY: API-hoz az unified history-t használjuk!
+                const contextId = window.unifiedHistoryManager.getContextId(profileId);
+                const unifiedHistory = window.unifiedHistoryManager.getHistory(contextId)
+                    .filter(msg => msg.type === 'text' || msg.type === 'voice')
+                    .map(msg => ({ role: msg.role, content: msg.content }));
+                
+                console.log(`📚 Messages API: Loading ${unifiedHistory.length} messages for context "${contextId}"`);
+                
+                const apiMessages = unifiedHistory;
                 
                 // Keressük-e?
                 let searchData = null;
@@ -194,21 +208,32 @@ class MessagesBackgroundHandler {
                 const weatherData = await getWeatherData();
         
                 let systemPrompt = profile.prompt;
-                systemPrompt += `\n\nCurrent date and time is ${dateTimeString}.`;
+                systemPrompt += `\n\n[BACKGROUND INFO - Use ONLY if asked]\nCurrent date and time: ${dateTimeString}.`;
+
                 if (weatherData) {
-                    systemPrompt += ` ${weatherData}`;
+                    systemPrompt += `\n${weatherData}`;
                 }
-        
+                
+                systemPrompt += `\n[END BACKGROUND INFO]`;
+
                 if (searchData && (searchData.braveResults.length > 0 || searchData.perplexityResults.length > 0)) {
-                    systemPrompt += '\n\n' + window.searchHandler.formatForContext(searchData);
-                    systemPrompt += '\n\nIMPORTANT: Use the search results above to answer the user\'s question with current, accurate information.';
+                    systemPrompt += '\n\n[SEARCH RESULTS - Use to answer current question]\n' + window.searchHandler.formatForContext(searchData) + '\n[END SEARCH RESULTS]';
                 }
-        
-                systemPrompt += `\n\nCRITICAL RULES:\n1. LANGUAGE: ALWAYS respond in the exact same language as the last user message.\n2. FORMAT: Keep your responses concise and conversational, suitable for an SMS message on a small screen.`;
+
+                systemPrompt += `\n\nCRITICAL RULES:\n1. MANDATORY LANGUAGE RULE: ALWAYS respond in the exact same language as the last user message, except if asked to use mixed languages.\n2. FORMAT: Keep your responses concise and conversational, suitable for an SMS message on a small screen.\n3. TIME/DATE: The current time is always fresh in the background info above. Only mention it if user explicitly asks.\n4. BACKGROUND INFO: Only mention weather/location/time if user explicitly asks. Do NOT volunteer this information.`;                
                 
                 console.log(`📤 Sending request to AI...`);
         
-                const response = await window.messagesAPI.sendMessage(apiMessages, systemPrompt);
+                // ✅ ÚJ: Explicit időfrissítő üzenet hozzáadása
+                const messagesWithTimeUpdate = [
+                    ...apiMessages,
+                    {
+                        role: 'system',
+                        content: `[CRITICAL TIME UPDATE]\nCurrent date and time RIGHT NOW: ${dateTimeString}\nIMPORTANT: If user asks about current time, use THIS fresh value, NOT any previous time mentions from the conversation history.\n[END TIME UPDATE]`
+                    }
+                ];
+                
+                const response = await window.messagesAPI.sendMessage(messagesWithTimeUpdate, systemPrompt);
                 aiReply = response.choices[0].message.content;
                 usage = response.usage;
                 usedModel = response.model || modelName;
@@ -224,15 +249,32 @@ class MessagesBackgroundHandler {
             );
             console.log(`💵 Estimated Cost: ${cost.toFixed(6)}`);
             
-            // AI válasz mentése
+            // ✅ UNIFIED HISTORY: Context ID generálása
+            const contextId = window.unifiedHistoryManager.getContextId(profileId);
+
+            // ✅ UNIFIED HISTORY: AI válasz mentése
+            window.unifiedHistoryManager.addMessage(contextId, {
+                role: 'assistant',
+                content: aiReply,
+                type: 'text',
+                metadata: {
+                    app: 'messages',
+                    profileName: profile.name,
+                    model: usedModel,
+                    tokens: usage,
+                    hasImage: hasImage
+                }
+            });
+
+            // Legacy: Thread storage (later migration)
             window.messagesStorage.addMessage(
                 profileId,
                 { emoji: profile.emoji, name: profile.name },
                 'assistant',
                 aiReply
             );
-            
-            console.log(`✅ AI message saved to storage`);
+
+            console.log(`✅ AI message saved to storage (unified + legacy)`);
             
             // ❌ NE FRISSÍTSÜK ÚJRA! Az addMessage() már megtette!
             // A sendMessageFunc() már meghívta az addMessage()-t, ami elmentette az üzenetet

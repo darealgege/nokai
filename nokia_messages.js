@@ -458,22 +458,37 @@ class NokiaMessages {
                 }
             }
         
-            // 1. Üzenet mentése a háttértárba
+            // 1. ✅ UNIFIED HISTORY: Context ID generálása
+            const contextId = window.unifiedHistoryManager.getContextId(this.currentProfile.filename);
+
+            // Ha van kép, mentjük el
             let imageAttachmentIds = null;
-            
-            // ✅ Ha van kép, mentjük el a storage-ba
             if (hasAttachment && this.imageHandler.pendingImageAttachment) {
-                const attachmentId = await window.imageAttachments.saveMessageImage( // ✅ Now async
+                const attachmentId = await window.imageAttachments.saveMessageImage(
                     {
                         full: this.imageHandler.pendingImageAttachment.full,
                         retro: this.imageHandler.pendingImageAttachment.retro
                     },
-                    this.currentProfile.filename  // threadId
+                    this.currentProfile.filename
                 );
                 imageAttachmentIds = [attachmentId];
                 console.log('✅ Messages image saved with ID:', attachmentId);
             }
-            
+
+            // ✅ UNIFIED HISTORY: User üzenet mentése
+            window.unifiedHistoryManager.addMessage(contextId, {
+                role: 'user',
+                content: messageText || '[Image]',
+                type: 'text',
+                metadata: {
+                    app: 'messages',
+                    profileName: this.currentProfile.name,
+                    attachmentIds: imageAttachmentIds,
+                    status: 'sent'
+                }
+            });
+
+            // Legacy: Thread storage (later migration)
             window.messagesStorage.addMessage(
                 this.currentProfile.filename,
                 { emoji: this.currentProfile.emoji, name: this.currentProfile.name }, 
@@ -820,10 +835,18 @@ class NokiaMessages {
             if (index === 0) itemDiv.classList.add('selected');
             itemDiv.setAttribute('data-index', index);
 
-            const text = document.createElement('span');
-            text.textContent = `${profile.emoji} ${profile.name}`;
+            // ✅ JAVÍTÁS: Emoji és név külön span elemekben
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'dialog-list-item-emoji';
+            emojiSpan.textContent = profile.emoji;
 
-            itemDiv.appendChild(text);
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'dialog-list-item-name';
+            nameSpan.textContent = ' ' + profile.name;
+
+            itemDiv.appendChild(emojiSpan);
+            itemDiv.appendChild(nameSpan);
+
             list.appendChild(itemDiv);
         });
 
@@ -984,10 +1007,10 @@ confirmDeleteThread() {
     }
 
     /**
-     * ✅ ÚJ: Smart timestamp formázás
-     * - Today: csak idő (HH:MM)
-     * - Yesterday: "Yesterday"
-     * - Older: rövid dátum (MMM DD)
+     * ✅ VÉGLEGES: Smart timestamp - MINDIG óra:perc-cel!
+     * - Ma: csak idő (13:45)
+     * - Tegnap: Yesterday + idő (Yesterday, 13:45)
+     * - Bármikor más: dátum + idő (Oct 25, 13:45)
      */
     formatSmartTimestamp(date) {
         const now = new Date();
@@ -997,15 +1020,26 @@ confirmDeleteThread() {
         const diffMs = today - msgDate;
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         
+        // Óra:perc formátum (13:45)
+        const timeString = date.toLocaleTimeString('hu-HU', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false 
+        });
+        
         if (diffDays === 0) {
-            // Today: csak idő
-            return date.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit', hour12: false });
+            // Ma: csak idő
+            return timeString;
         } else if (diffDays === 1) {
-            // Yesterday
-            return 'Yesterday';
+            // Tegnap: "Yesterday, 13:45"
+            return `Yesterday, ${timeString}`;
         } else {
-            // Older: rövid dátum
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            // Bármikor más (2 napja, 10 napja, tavaly): "Oct 25, 13:45"
+            const dateString = date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            return `${dateString}, ${timeString}`;
         }
     }
 

@@ -18,7 +18,8 @@ class NokiaProfileManager {
             'leonard': 'echo',        
             'gyuszi': 'echo',         
             'gazsi': 'ash',    
-            'monday': 'shimmer',        
+            'monday': 'shimmer',  
+            'aion': 'ash',                      
             'photographer': 'marin',  
             'lang_teacher': 'cedar', 
             'teacher': 'sage', 
@@ -201,8 +202,18 @@ class NokiaProfileManager {
                 item.classList.add('selected');
             }
             
-            item.textContent = profile.fullName;
-            item.dataset.profileIndex = i; // CHANGED: Use profileIndex instead of index
+            // ✅ JAVÍTÁS: Emoji és név külön span elemekben
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'profile-item-emoji';
+            emojiSpan.textContent = profile.emoji;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'profile-item-name';
+            nameSpan.textContent = ' ' + profile.name;
+            
+            item.appendChild(emojiSpan);
+            item.appendChild(nameSpan);
+            item.dataset.profileIndex = i;
             
             listContainer.appendChild(item);
         }

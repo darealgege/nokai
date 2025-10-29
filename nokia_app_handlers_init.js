@@ -3,12 +3,27 @@
  * DOMContentLoaded, button events, and app initialization
  */
 
-// Weather cache (5 minutes)
+// Weather cache (1 minute) with auto-refresh
 let weatherCache = {
     data: null,
     timestamp: 0,
-    ttl: 5 * 60 * 1000
+    ttl: 1 * 60 * 1000
 };
+
+// ✅ AUTO-REFRESH: Frissítjük percenként a weather-t
+setInterval(async () => {
+    if (weatherCache.timestamp > 0) { // Csak ha már volt lekérés
+        console.log('🌤️ Auto-refreshing weather data...');
+        try {
+            const weather = await getWeatherData();
+            if (weather) {
+                console.log('✅ Weather auto-refresh successful');
+            }
+        } catch (error) {
+            console.warn('⚠️ Weather auto-refresh failed:', error);
+        }
+    }
+}, 60000); // 60 seconds
 
 // Initialize search handler and decision agent
 /* let searchHandler = null;
@@ -68,8 +83,7 @@ async function handleApiKeySetup() {
 
     if (hasKey) {
         try {
-            const pin = await window.pinScreen.show('Enter PIN to Unlock');
-            
+            const pin = await window.pinScreen.show('Enter PIN to Unlock');            
             // Ha a felhasználó a 'C' gombbal lépett ki (ami a hide() metódust hívja),
             // a promise reject-el, és a catch ág fut le.
             // Ha a felhasználó OK-t nyom, de nem írt be semmit, a 'pin' üres string lesz.
@@ -173,11 +187,29 @@ async function getWeatherData() {
         }
         
         const weatherData = await response.json();
-        
+        console.log('🌤️ Weather data received:', weatherData);
         if (weatherData.success) {
-            weatherCache.data = weatherData.context;
+            // ✅ Formázzuk a location objektumot stringgé
+            let contextString = '';
+            
+            if (weatherData.location) {
+                const loc = weatherData.location;
+                contextString = `User location: ${loc.full_address || loc.name}`;
+                if (loc.country) {
+                    contextString += `, ${loc.country}`;
+                }
+                contextString += '. ';
+            }
+            
+            // Hozzáadjuk a weather context-et
+            if (weatherData.context) {
+                contextString += weatherData.context;
+            }
+            
+            weatherCache.data = contextString;
             weatherCache.timestamp = Date.now();
-            return weatherData.context;
+            console.log('✅ Weather + Location context prepared:', contextString);
+            return contextString;
         }
         
         return null;
@@ -386,25 +418,33 @@ window.startVoiceCallWithProfile = async function(profile) {
     // === JAVÍTÁS VÉGE ===
         
     voiceHandler.onTranscriptReceived = async (role, text) => {
-        if (role === 'user') {
-            // ✅ NEW: Add to current call transcript
-            if (window.voiceHandler) {
-                window.voiceHandler.currentCallTranscript.push({ role: 'user', text: text });
+    // ✅ UNIFIED HISTORY: Lekérjük a context ID-t
+    const contextId = window.currentChatContextId || 'main';
+    
+    if (role === 'user') {
+        if (window.searchHandler) {
+            window.searchHandler.clearResults();
+        }            
+        // ✅ NEW: Add to current call transcript
+        if (window.voiceHandler) {
+            window.voiceHandler.currentCallTranscript.push({ role: 'user', text: text });
+        }
+        
+        voiceHandler._addEventToTranscript('You: ' + text, 'transcript-user');
+        
+        // ✅ UNIFIED HISTORY: User üzenet mentése
+        window.unifiedHistoryManager.addMessage(contextId, {
+            role: 'user',
+            content: text,
+            type: 'voice',
+            metadata: {
+                app: 'phone',
+                profileName: profile ? profile.name : 'AI',
+                isVoice: true
             }
-            
-            //addMessage('🎤 You: ' + text, 'user-msg');
-            voiceHandler._addEventToTranscript('You: ' + text, 'transcript-user');
-            // ✅ JAVÍTÁS: Metadata hozzáadása
-            window.conversationHistory.push({ 
-                role: 'user', 
-                content: text,
-                metadata: {
-                    isVoice: true,
-                    profileName: profileName,
-                    timestamp: Date.now()
-                }
-            });
-            saveToStorage();
+        });
+
+        saveToStorage();
             
             if (decisionAgent && searchHandler && voiceHandler.isActive()) {
                 const needsSearch = await decisionAgent.shouldSearchVoice(text);
@@ -434,7 +474,7 @@ window.startVoiceCallWithProfile = async function(profile) {
                             type: 'response.create',
                             response: {
                                 modalities: ['audio', 'text'],
-                                instructions: 'Say ONLY "Egy pillanat, keresek" or "One moment, searching" in the user\'s language. NOTHING ELSE.'
+                                instructions: 'Briefly respond in the user\'s language with a natural phrase like “Egy pillanat, utánanézek, tartsd a vonalat…” or “One moment, please hold the line, I’ll check that for you…”, mentioning what you’re searching for (e.g. “Egy pillanat, tartsd a vonalat amíg utánanézek az időjárásnak.”). Keep it short, friendly, and topic-aware — do not give results yet; wait for the search results to arrive first.'
                             }
                         }));
                     } catch (error) {
@@ -509,18 +549,20 @@ window.startVoiceCallWithProfile = async function(profile) {
             }
             
             const profileName = profile ? profile.name : 'AI';
-            //addMessage(`🔊 ${profileName}: ` + text, 'ai-msg');
             window.voiceHandler._addEventToTranscript(`${profileName}: ` + text, 'transcript-ai');
-            // ✅ JAVÍTÁS: Metadata hozzáadása
-            window.conversationHistory.push({ 
-                role: 'assistant', 
+            
+            // ✅ UNIFIED HISTORY: AI válasz mentése
+            window.unifiedHistoryManager.addMessage(contextId, {
+                role: 'assistant',
                 content: text,
+                type: 'voice',
                 metadata: {
-                    isVoice: true,
+                    app: 'phone',
                     profileName: profileName,
-                    timestamp: Date.now()
+                    isVoice: true
                 }
             });
+            
             saveToStorage();
         }
     };
@@ -561,6 +603,17 @@ const sanitizeInput = (input) => {
 async function sendMessage() {
     if (!currentInput.trim() || menuOpen) return;
     
+    // ✅ UNIFIED HISTORY: MINDIG az aktuális profil context-ét használjuk
+    const selectedProfile = window.profileManager ? window.profileManager.getSelectedProfile() : null;
+    const contextId = selectedProfile ? 
+        window.unifiedHistoryManager.getContextId(selectedProfile.filename) : 
+        'main';
+    
+    // Frissítjük a globális context-et
+    window.currentChatContextId = contextId;
+    window.unifiedHistoryManager.switchContext(contextId);
+    
+    const currentHistory = window.unifiedHistoryManager.getHistory(contextId);
     // ✅ Ellenőrizzük, van-e csatolt kép
     const hasAttachment = window.chatGPTImageHandler && window.chatGPTImageHandler.hasPendingAttachment();
     
@@ -570,10 +623,11 @@ async function sendMessage() {
         t9SelectedIndex = 0;
     }
     
-    const selectedProfile = window.profileManager ? window.profileManager.getSelectedProfile() : null;
+    //const selectedProfile = window.profileManager ? window.profileManager.getSelectedProfile() : null;
     const profileName = selectedProfile ? selectedProfile.name : 'AI';
     const profilePrompt = selectedProfile ? selectedProfile.prompt : '';
     
+    // ✅ ÚJ: Friss idő készítése
     const now = new Date();
     const dateTimeString = now.toLocaleString('hu-HU', { 
         year: 'numeric', 
@@ -605,7 +659,7 @@ async function sendMessage() {
     
     // ✅ JAVÍTÁS: userImageId deklarálása előre
     let userImageId = null;
-    
+    const userMessage = currentInput;
     // ✅ JAVÍTÁS: Teljes üzenet objektum mentése metadata-val
     const userMessageObject = {
         role: 'user',
@@ -616,15 +670,23 @@ async function sendMessage() {
         }
     };
     
-    // Ha van kép, hozzáadjuk az attachmentId-t
+    // Ha van kép, mentünk
     if (hasAttachment && window.chatGPTImageHandler.pendingImageAttachment) {
-        userImageId = await window.imageAttachments.saveChatImage(window.chatGPTImageHandler.pendingImageAttachment); // ✅ Now async
-        userMessageObject.attachmentId = userImageId;
+        userImageId = await window.imageAttachments.saveChatImage(window.chatGPTImageHandler.pendingImageAttachment);
         console.log('✅ ChatGPT image saved with ID:', userImageId);
     }
     
-    window.conversationHistory.push(userMessageObject);
-    
+    // ✅ UNIFIED HISTORY: addMessage - új API
+    window.unifiedHistoryManager.addMessage(contextId, {
+        role: 'user',
+        content: convertedUserMessage,
+        type: 'text',
+        metadata: {
+            app: 'chatgpt',
+            profileName: profileName,
+            attachmentId: userImageId
+        }
+    });
     // ✅ ÚJ: Ha van kép, eléje rakjuk az emoji-t a MEGJELENÍTÉSHEZ
     let displayText = convertedUserMessage;
     if (hasAttachment) {
@@ -659,19 +721,31 @@ async function sendMessage() {
             const dateTimeString = now.toLocaleString('hu-HU', { hour12: false });
             
             let systemPrompt = profilePrompt || '';
-            systemPrompt += `\n\nCurrent date and time is ${dateTimeString}.`;
+            systemPrompt += `\n\n[BACKGROUND INFO - Use ONLY if asked]\nCurrent date and time: ${dateTimeString}.`;
             if (weatherData) {
-                systemPrompt += ` ${weatherData}`;
+                systemPrompt += `\n${weatherData}`;
             }
-            
+            systemPrompt += `\n[END BACKGROUND INFO]`;
+            systemPrompt += `\n\nCRITICAL RULES:\n1. LANGUAGE: ALWAYS respond in the exact same language as the user's message.\n2. TIME/DATE: The current time is always fresh in the background info above. Only mention it if user explicitly asks.\n3. BACKGROUND INFO: Only mention weather/location/time if user explicitly asks. Do NOT volunteer this information.`;            
             loadingMessage.textContent = 'AI analyzing image...';
+            
+            // ✅ UNIFIED HISTORY: Csak text típusú üzenetek az API-nak
+            const textOnlyHistory = currentHistory
+                .filter(msg => msg.type === 'text')
+                .map(msg => ({ role: msg.role, content: msg.content }));
+            
+            // ✅ ÚJ: Explicit időfrissítő üzenet hozzáadása a history végére
+            textOnlyHistory.push({
+                role: 'system',
+                content: `[CRITICAL TIME UPDATE]\nCurrent date and time RIGHT NOW: ${dateTimeString}\nIMPORTANT: If user asks about current time, use THIS fresh value, NOT any previous time mentions.\n[END TIME UPDATE]`
+            });
             
             // Vision API hívás a konvertált üzenettel
             const visionResult = await window.chatGPTImageHandler.sendMessageWithImage(
                 convertedUserMessage,
-                window.conversationHistory
+                textOnlyHistory
             );
-            
+                        
             console.log(`✅ Model Used: ${visionResult.model}`);
             if (visionResult.usage) console.log(`📊 Tokens:`, visionResult.usage);
             console.groupEnd();
@@ -687,12 +761,15 @@ async function sendMessage() {
             loadingMessage.remove();
             
             // ✅ JAVÍTÁS: AI válasz teljes objektummal
-            window.conversationHistory.push({
-                role: 'assistant',
+            window.unifiedHistoryManager.addMessage(contextId, {
+            role: 'system',
             content: visionResult.aiReply,
-                metadata: {
+            type: 'text',
+            metadata: {
+                app: 'chatgpt',
                 profileName: profileName,
-                timestamp: Date.now()
+                model: visionResult.model,
+                tokens: visionResult.usage
             }
         });
         await addMessage(`${profileName}: ` + visionResult.aiReply, 'ai-msg');
@@ -718,22 +795,39 @@ async function sendMessage() {
             }
         }
         
-        let systemContext = profilePrompt ? `${profilePrompt}\n\nCurrent date and time: ${dateTimeString}` : `Current date and time: ${dateTimeString}`;
+        let systemContext = profilePrompt ? `${profilePrompt}\n\n` : '';
+        systemContext += `[BACKGROUND INFO - Use ONLY if asked]\nCurrent date and time: ${dateTimeString}.`;
+
         if (weatherData) {
-            systemContext += `. ${weatherData}`;
+            systemContext += `\n${weatherData}`;
         }
+        
+        systemContext += `\n[END BACKGROUND INFO]`;
+        
+        systemContext += `\n\nIMPORTANT: Background info in brackets is for reference only. Do NOT mention it unless the user specifically asks about weather, location, or time.`;
         
         if (searchData && (searchData.braveResults.length > 0 || searchData.perplexityResults.length > 0)) {
             systemContext += '\n\n' + searchHandler.formatForContext(searchData);
             systemContext += '\n\nIMPORTANT: Use the search results above to answer the user\'s question with current, accurate information. Cite sources when relevant.';
         }
         
+        // ✅ UNIFIED HISTORY: Csak text típusú üzenetek az API-nak
+        const textOnlyHistory = currentHistory
+            .filter(msg => msg.type === 'text')
+            .map(msg => ({ role: msg.role, content: msg.content }));
+        //console.log('✅ System context prepared:', systemContext);
+        
+        // ✅ ÚJ: Explicit időfrissítő üzenet hozzáadása
         const messagesWithContext = [
             {
                 role: 'system',
                 content: systemContext
             },
-            ...window.conversationHistory
+            ...textOnlyHistory,
+            {
+                role: 'system',
+                content: `[CRITICAL TIME UPDATE]\nCurrent date and time RIGHT NOW: ${dateTimeString}\nIMPORTANT: If user asks about current time, use THIS fresh value, NOT any previous time mentions from the conversation history.\n[END TIME UPDATE]`
+            }
         ];
         
         // ✅ JAVÍTÁS: Részletes, csoportosított logolás a nyers eredményekkel
@@ -785,24 +879,33 @@ async function sendMessage() {
         console.log(aiResponse);
         console.groupEnd();
         
-        // ✅ JAVÍTÁS: AI válasz teljes objektummal
-        window.conversationHistory.push({
+        // ✅ UNIFIED HISTORY: AI válasz mentése
+        window.unifiedHistoryManager.addMessage(contextId, {
             role: 'assistant',
             content: aiResponse,
+            type: 'text',
             metadata: {
+                app: 'chatgpt',
                 profileName: profileName,
-                timestamp: Date.now()
+                model: data.model || modelName,
+                tokens: data.usage
             }
         });
+
         await addMessage(`${profileName}: ` + aiResponse, 'ai-msg');
         saveToStorage();
         
-    } catch (error) {
-        if (loadingMessage) loadingMessage.remove();
-        await addMessage('ERROR: ' + error.message);
-        window.conversationHistory.pop();
-        saveToStorage();
-    }
+        } catch (error) {
+            if (loadingMessage) loadingMessage.remove();
+            await addMessage('ERROR: ' + error.message);
+            // ✅ UNIFIED HISTORY: Hibánál töröljük az utolsó user üzenetet
+            const history = window.unifiedHistoryManager.getHistory(contextId);
+            if (history.length > 0 && history[history.length - 1].role === 'user') {
+                history.pop();
+                window.unifiedHistoryManager.saveHistories();
+            }
+            saveToStorage();
+        }
 }
 
 // Safe DOM element getter
@@ -848,6 +951,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.profileManager = new window.NokiaProfileManager();
         await window.profileManager.loadProfiles();
         console.log('✅ Profile manager initialized');
+        
+        // ✅ UNIFIED HISTORY: Profile change callback
+        window.profileManager.onProfileChange = (profile) => {
+            console.log('👤 Profile changed to:', profile.name);
+            
+            const contextId = window.unifiedHistoryManager.getContextId(profile.filename);
+            window.unifiedHistoryManager.switchContext(contextId);
+            window.currentChatContextId = contextId;
+            
+            console.log(`🔄 Context switched to: ${contextId}`);
+            console.log(`📊 Messages in context: ${window.unifiedHistoryManager.getMessageCount(contextId)}`);
+            
+            // ✅ UI frissítés ChatGPT-ben - CLEAR és history reload
+            if (window.appManager && window.appManager.isInChatGPT()) {
+                const screenContent = document.getElementById('screenContent');
+                if (screenContent) {
+                    // Töröljük az összes üzenetet
+                    screenContent.querySelectorAll('.message').forEach(msg => msg.remove());
+                    
+                    // Újratöltjük az új context üzeneteit
+                    restoreMessages();
+                    
+                    // Scroll to bottom
+                    setTimeout(() => {
+                        screenContent.scrollTop = screenContent.scrollHeight;
+                    }, 50);
+                }
+            }
+        };
     }
     
     // ✅ ÚJ: ChatGPT Image Handler inicializálása
@@ -886,8 +1018,8 @@ function initializeButtonListeners() {
     console.log('🔘 Finalizing all button listeners (v-final)...');
     let touchEventProcessed = false;
     // --- Segédfüggvény a normál gombokhoz ---
-    const addStandardListener = (element, dtmfKey, logicHandler) => {
-        if (!element || typeof logicHandler !== 'function') return;
+    const addStandardListener = (element, dtmfKey, handlerName) => {
+        if (!element || typeof handlerName !== 'string') return;
         if (element._safeHandlers) {
             element.removeEventListener('mousedown', element._safeHandlers.down);
             element.removeEventListener('touchstart', element._safeHandlers.down);
@@ -914,7 +1046,11 @@ function initializeButtonListeners() {
 
             e.preventDefault();
             element.classList.remove('active-key');
-            logicHandler();
+            
+            // ✅ JAVÍTÁS: Dinamikusan hívjuk a globális függvényt név alapján!
+            if (typeof window[handlerName] === 'function') {
+                window[handlerName]();
+            }
 
             // Ha ez egy touch esemény volt, állítsuk be a zászlót
             if (e.type === 'touchend') {
@@ -936,21 +1072,27 @@ function initializeButtonListeners() {
     };
 
     // --- Normál gombok regisztrálása ---
+    // ✅ JAVÍTÁS: Használjunk wrapper függvényeket a numerikus gombokhoz
     document.querySelectorAll('.keypad .key[data-key]').forEach(button => {
         const key = button.dataset.key;
         if (!isNaN(parseInt(key))) {
-            addStandardListener(button, key, () => window.handleKey(key));
+            // Wrapper függvény, hogy dinamikusan hívhassa a handleKey-t a kulccsal
+            const wrapperName = `_handleKey${key}`;
+            window[wrapperName] = () => window.handleKey(key);
+            addStandardListener(button, key, wrapperName);
         }
     });
-    addStandardListener(document.querySelector('.key-star'), '*', window.handleShift);
-    addStandardListener(document.querySelector('.key-hash'), '#', window.handleHash);
-    addStandardListener(document.querySelector('.nav-key[data-key="menu"]'), '5', window.handleMenu);
-    addStandardListener(document.querySelector('.dpad-up'), '2', window.handleNavUp);
-    addStandardListener(document.querySelector('.dpad-down'), '8', window.handleNavDown);
-    addStandardListener(document.querySelector('.dpad-left'), '4', window.handleNavLeft);
-    addStandardListener(document.querySelector('.dpad-right'), '6', window.handleNavRight);
-    addStandardListener(document.querySelector('.dpad-center'), '5', window.handleOK);
-    addStandardListener(document.getElementById('callStartBtn'), '5', window.handleCallStart);
+    
+    // ✅ JAVÍTÁS: String névvel adjuk át a függvényeket!
+    addStandardListener(document.querySelector('.key-star'), '*', 'handleShift');
+    addStandardListener(document.querySelector('.key-hash'), '#', 'handleHash');
+    addStandardListener(document.querySelector('.nav-key[data-key="menu"]'), '5', 'handleMenu');
+    addStandardListener(document.querySelector('.dpad-up'), '2', 'handleNavUp');
+    addStandardListener(document.querySelector('.dpad-down'), '8', 'handleNavDown');
+    addStandardListener(document.querySelector('.dpad-left'), '4', 'handleNavLeft');
+    addStandardListener(document.querySelector('.dpad-right'), '6', 'handleNavRight');
+    addStandardListener(document.querySelector('.dpad-center'), '5', 'handleOK');
+    addStandardListener(document.getElementById('callStartBtn'), '5', 'handleCallStart');
 
     // --- Speciális, Long-Press gombok regisztrálása KÖZVETLENÜL ITT ---
 
@@ -958,7 +1100,12 @@ function initializeButtonListeners() {
     const clearBtn = document.querySelector('.key-clear');
     let clearPressTimer = null;
     let longPressTriggered = false;
-    
+    window.currentChatContextId = 'main'; 
+
+    // A régi `window.conversationHistory` helyett ezt fogjuk használni.
+    // A `loadFromStorage` fogja feltölteni.
+    window.conversationHistories = { main: [] };    
+
     if (clearBtn) {
         const startPress = (e) => {
             e.preventDefault();
@@ -989,51 +1136,8 @@ function initializeButtonListeners() {
     }
 
     // 2. PIROS GOMB (End Call / DOOM)
-    const callEndBtn = document.getElementById('callEndBtn');
-    if (callEndBtn) {
-        let doomActivationTimer = null;
-        let doomCountdownInterval = null;
-
-        if (callEndBtn._safeHandlers) {
-            callEndBtn.removeEventListener('mousedown', callEndBtn._safeHandlers.down);
-            callEndBtn.removeEventListener('touchstart', callEndBtn._safeHandlers.down);
-            callEndBtn.removeEventListener('mouseup', callEndBtn._safeHandlers.up);
-            callEndBtn.removeEventListener('touchend', callEndBtn._safeHandlers.up);
-        }
-
-        const startPress = (e) => {
-            e.preventDefault();
-            playDTMF('1');
-            callEndBtn.classList.add('active-key');
-            /* if (!window.doomEasterEgg.isActive() && !(window.voiceHandler && window.voiceHandler.isActive())) {
-                doomActivationTimer = setTimeout(() => {
-                    clearInterval(doomCountdownInterval);
-                    window.doomEasterEgg.activate();
-                }, 6000);
-            } */
-        };
-        const endPress = (e) => {
-            e.preventDefault();
-            callEndBtn.classList.remove('active-key');
-            if (doomActivationTimer) {
-                clearTimeout(doomActivationTimer);
-                doomActivationTimer = null;
-            }
-            if (doomCountdownInterval) {
-                clearInterval(doomCountdownInterval);
-                doomCountdownInterval = null;
-            }
-            // A logikát csak akkor futtatjuk, ha NEM volt DOOM aktiváció folyamatban
-            if (!longPressTriggered) {
-                window.handleCallEnd();
-            }
-        };
-        callEndBtn.addEventListener('mousedown', startPress);
-        callEndBtn.addEventListener('touchstart', startPress, { passive: false });
-        callEndBtn.addEventListener('mouseup', endPress);
-        callEndBtn.addEventListener('touchend', endPress, { passive: false });
-        callEndBtn._safeHandlers = { down: startPress, up: endPress };
-    }
+    // ✅ JAVÍTÁS: Dinamikus függvényhívás
+    addStandardListener(document.getElementById('callEndBtn'), '1', 'handleCallEnd');
 
     console.log('✅ All button listeners finalized.');
 }
@@ -1105,5 +1209,22 @@ function initializeButtonListeners() {
         window.messagesStorage.updateNewMessageIndicator();
         console.log('✅ Messages notification indicator updated on page load');
     }
+
+    // ✅ ÚJ: Unified History migráció futtatása (csak egyszer)
+    if (!localStorage.getItem('unified_history_migrated')) {
+        console.log('🔄 Running first-time history migration...');
+        if (window.unifiedHistoryManager) {
+            window.unifiedHistoryManager.migrateAllHistories();
+            localStorage.setItem('unified_history_migrated', 'true');
+            console.log('✅ Migration complete!');
+        }
+    }
+
+    // ✅ ÚJ: Első weather lekérés indítása
+    getWeatherData().then(() => {
+        console.log('✅ Initial weather data loaded');
+    }).catch(err => {
+        console.warn('⚠️ Initial weather fetch failed:', err);
+    });
 
 });

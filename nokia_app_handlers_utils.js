@@ -43,7 +43,10 @@ function resetScreen(message = 'Session cleared!') {
     screenContent.appendChild(inputLine);
     currentInput = '';
     cursorPosition = 0;
-    window.conversationHistory = [];
+    /* window.conversationHistory = []; */
+    if (window.conversationHistories) {
+        window.conversationHistories['main'] = [];
+    }    
     t9Sequence = '';
     t9Suggestions = [];
     saveToStorage();
@@ -536,11 +539,13 @@ function handleFactoryReset() {
             document.getElementById('confirmDialog').classList.add('hidden');
             isDialogActive = false; // Fontos a globális állapot frissítése is!
             // 2. PIN kód bekérése a törlés megerősítéséhez
+            window.appManager.hideAllScreens();
             const pin = await window.pinScreen.show('Enter PIN to Confirm Reset');
-
+            
             // Ha a felhasználó üresen hagyja, vagy megszakítja (a catch blokk kezeli)
             if (!pin) {
-                await showAlert('PIN not entered. Reset cancelled.', 'Aborted');
+                window.appManager.showHomeScreen();
+                await showAlert('PIN not entered. Reset cancelled.', 'Aborted');                
                 return;
             }
 
@@ -555,6 +560,8 @@ function handleFactoryReset() {
                 console.log('🗑️ Deleting IndexedDB databases...');
                 indexedDB.deleteDatabase('NokaiConfigDB');
                 indexedDB.deleteDatabase('DoomSavesDB');
+                indexedDB.deleteDatabase('DoomStateDB');
+                indexedDB.deleteDatabase('NokaiImageDB');
 
                 // LocalStorage törlése
                 console.log('🗑️ Clearing localStorage...');
@@ -571,10 +578,13 @@ function handleFactoryReset() {
 
             } else {
                 // SIKERTELEN VALIDÁLÁS: A PIN hibás
+                window.appManager.showHomeScreen();
                 await showAlert('Incorrect PIN. Factory reset aborted.', 'Error');
+                
             }
         } catch (error) {
             // Ez a blokk fut le, ha a felhasználó a piros gombbal/C-vel szakítja meg a PIN bevitelt
+            window.appManager.showHomeScreen();
             console.log('Factory reset cancelled by user during PIN entry.');
             await showAlert('Reset cancelled.', 'Aborted');
         }

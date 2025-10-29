@@ -16,7 +16,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 8px;
+    padding: 0px 0px 0px 4px;
     font-family: 'Courier New', monospace;
     font-size: 12px;
 }
@@ -77,6 +77,9 @@
     gap: 2px;
     height: 100%; /* ✅ ÚJ: Kitölti a rendelkezésre álló helyet */
     overflow-y: auto; /* ✅ ÚJ: Engedélyezi a görgetést */
+    width: 100%;
+    padding-top: 8px;
+;
 }
 
 /* ✅ ÚJ: Scrollbar stílus a thread listához */
@@ -94,9 +97,9 @@
     border-radius: 4px;
     background: rgba(26, 58, 26, 0.05);
     cursor: default;
-    transition: background 0.2s;
-    filter: grayscale(100%);
+    transition: background 0.2s;    
     flex-shrink: 0; /* Megakadályozza, hogy az elemek összenyomódjanak */
+    max-width: 98%;
 }
 
 .thread-item.selected {
@@ -115,6 +118,8 @@
 .thread-emoji {
     font-size: 18px;
     flex-shrink: 0;
+    filter: grayscale(1);
+    opacity: 75%;
 }
 
 .thread-name {
@@ -143,14 +148,17 @@
     align-items: center;
     gap: 6px;    
     background: rgba(26, 58, 26, 0.15);
-    border-bottom: 1px solid rgba(26, 58, 26, 0.3);
-    margin: -8px -8px 0px -8px;
+    padding: 2px 0px 2px 2px;
+    /* border-bottom: 1px solid rgba(26, 58, 26, 0.3); */
+    margin: 0px 0px 0px -4px;
     filter: grayscale(100%);
+    box-shadow: 0px 2px 2px rgb(0 0 0 / 20%);
 }
 
 .conv-emoji {
     font-size: 14px;
-    margin-left: 4px;
+    margin-left: 8px;
+    opacity: 75%;
 }
 
 .conv-name {
@@ -194,6 +202,7 @@
     max-width: 90%;
     display: flex;
     flex-direction: column;
+    box-shadow: 0px 2px 2px rgb(0 0 0 / 20%);
 }
 
 .msg-user {
@@ -201,7 +210,7 @@
     margin-left: auto;
     margin-top: 6px;
     margin-bottom: 6px;
-    margin-right: 0;
+    margin-right: 6px;
     text-align: right;
     font-weight: 500;
     align-items: flex-end;
@@ -209,7 +218,7 @@
 
 .msg-ai {
     background: rgba(26, 58, 26, 0.08);
-    margin-left: 0;
+    margin-left: 6px;
     margin-right: auto;
     align-items: flex-start;
 }
@@ -247,10 +256,10 @@
 .conversation-input {
     display: flex;
     align-items: flex-start;
-    padding: 4px 8px 4px;
+    padding: 2px 12px 0px 6px;
     border-top: 1px solid rgba(26, 58, 26, 0.3);
     background: rgba(26, 58, 26, 0.05);
-    margin: 0px -8px -8px -8px;
+    margin: 0px -8px 2px -8px;
     min-height: 28px;
     flex-shrink: 0;
     align-items: center;
@@ -302,7 +311,7 @@
     height: 17px;
     background: #1a3a1a;
     left: 4px; 
-    top: 2px;
+    top: 4px;
     animation: blink-cursor 1s step-end infinite;
     pointer-events: none;
     filter: grayscale(100%);

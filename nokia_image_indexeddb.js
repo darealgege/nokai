@@ -6,7 +6,7 @@
 
 class ImageIndexedDB {
     constructor() {
-        this.dbName = 'NokiaImageDB';
+        this.dbName = 'NokaiImageDB';
         this.dbVersion = 1;
         this.db = null;
         this.ready = false;

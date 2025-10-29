@@ -21,7 +21,9 @@ class NokiaAppManager {
             { id: 'input', icon: '⌨️', name: 'Input Settings' }
         ];
         this.games = [
-            { id: 'doom', icon: 'doom_icon.png', name: 'DOOM' }
+            { id: 'doom', icon: 'doom_icon.png', name: 'DOOM' },
+            { id: 'super_steve', icon: 'super_steve_icon.png', name: 'Super Steve' },
+            { id: 'snake', icon: '🐍', name: 'Snake' }
         ];
         this.dialogStack = [];
     }
@@ -347,8 +349,8 @@ class NokiaAppManager {
                     break;
                 case 'factory_reset':
                 this.closeCurrentDialog(true); 
-                if (typeof handleFactoryReset === 'function') {
-                    handleFactoryReset();
+                if (typeof handleFactoryReset === 'function') {                    
+                    handleFactoryReset();                    
                 }
                 break;    
                 case 'about':
@@ -440,14 +442,83 @@ class NokiaAppManager {
     }
 
     showGamesMenu() {
-        this.showCategoryDialog('Games', this.games, async (game) => {
+        this.showGamesDialog();
+    }
+
+    showGamesDialog() {
+        const dialog = this.createDialog('Games', 'games-dialog');
+        const grid = document.createElement('div');
+        grid.className = 'games-grid';
+        
+        this.games.forEach((game, index) => {
+            const gameIcon = document.createElement('div');
+            gameIcon.className = 'game-icon-item';
+            gameIcon.setAttribute('data-index', index);
+            if (index === 0) gameIcon.classList.add('selected');
+            
+            const icon = document.createElement('div');
+            icon.className = 'game-icon';
+            
+            // ✅ JAVÍTÁS: Külön osztály emoji és kép ikonokhoz
+            if (game.icon.endsWith('.png') || game.icon.endsWith('.jpg')) {
+                icon.classList.add('image-icon');
+                const img = document.createElement('img');
+                img.src = game.icon;
+                img.alt = game.name;
+                icon.appendChild(img);
+            } else {
+                icon.classList.add('emoji-icon');
+                icon.textContent = game.icon;
+            }
+            
+            const label = document.createElement('div');
+            label.className = 'game-label';
+            label.textContent = game.name;
+            
+            gameIcon.appendChild(icon);
+            gameIcon.appendChild(label);
+            grid.appendChild(gameIcon);
+        });
+        
+        dialog.appendChild(grid);
+        
+        const hint = document.createElement('div');
+        hint.className = 'dialog-hint';
+        hint.textContent = '▲▼◀▶ Navigate | OK Select | C Back';
+        dialog.appendChild(hint);
+        
+        this.showDialog(dialog, this.games, async (game) => {
             if (game.id === 'doom') {
                 await this.launchDoom();
+            } else if (game.id === 'snake') {
+                this.launchSnake();
+            } else if (game.id === 'super_steve') {
+                this.launchSuperSteve();
             }
         });
     }
 
-    async launchDoom() {
+    launchSnake() {
+        if (window.snakeGame) {
+            console.log('🐍 Launching Snake game...');
+            this.closeAllDialogs();
+            window.snakeGame.activate();
+        } else {
+            console.error('❌ Snake game not initialized');
+        }
+    }
+
+    launchSuperSteve() {
+        if (window.superSteveGame) {
+            console.log('🎮 Launching Super Steve game...');
+            this.closeAllDialogs();
+            window.superSteveGame.activate();
+        } else {
+            console.error('❌ Super Steve game not initialized');
+        }
+    }
+
+    /* async launchDoom() {
         if (window.doomEasterEgg) {
             if (window.doomEasterEgg.isActive()) {
                 console.log('🎮 DOOM already active, bringing to foreground');
@@ -488,7 +559,79 @@ class NokiaAppManager {
                 window.doomEasterEgg.activate();
             }
         }
-    }
+    } */
+
+ async launchDoom() {
+        if (window.doomEasterEgg) {
+            if (window.doomEasterEgg.isActive()) {
+                console.log('🎮 DOOM already active, bringing to foreground');
+                this.closeAllDialogs();
+            } else {
+                console.log('🎮 Starting new DOOM session');
+                
+                // ✅ FIX: Close ALL dialogs before DOOM
+                this.closeAllDialogs();
+                
+                // === JAVÍTÁS KEZDETE: Vezérlők manuális mentése és visszaállítása ===
+
+                // 1. Mentsük el a jelenlegi, globális vezérlő függvényeket.
+                // Ez a legfontosabb lépés, ami eddig hiányzott.
+                const originalHandlers = {
+                    handleNavUp: window.handleNavUp,
+                    handleNavDown: window.handleNavDown,
+                    handleNavLeft: window.handleNavLeft,
+                    handleNavRight: window.handleNavRight,
+                    handleOK: window.handleOK,
+                    handleMenu: window.handleMenu,
+                    handleKey: window.handleKey,
+                    handleCallStart: window.handleCallStart,
+                    handleCallEnd: window.handleCallEnd,
+                    handleClear: window.handleClear,
+                    handleShift: window.handleShift,
+                    handleHash: window.handleHash
+                };
+                console.log('✅ Backed up global controls before launching DOOM.');
+
+                // 2. Állítsuk be a DOOM kilépési callback-et (ez a rész már megvolt, de kiegészítjük).
+                const originalDeactivate = window.doomEasterEgg.deactivate.bind(window.doomEasterEgg);
+                const appManagerRef = this;
+                
+                window.doomEasterEgg.deactivate = async function() {
+                    console.log('🎮 DOOM deactivating, restoring controls and Games dialog...');
+                    
+                    // Először lefut az eredeti deactivate, ami eltünteti a DOOM UI-t.
+                    await originalDeactivate();
+                    
+                    // 3. ÁLLÍTSUK VISSZA a lementett globális vezérlőket.
+                    Object.assign(window, originalHandlers);
+                    console.log('✅ Global controls restored after DOOM exit.');
+                    
+                    // 4. A gombfigyelők újraindítása, hogy biztosan működjenek.
+                    // Ez lecseréli a régi 'reinitializeDpadTouch' hívást egy megbízhatóbb megoldásra.
+                    if (typeof initializeButtonListeners === 'function') {
+                        setTimeout(() => {
+                            initializeButtonListeners();
+                            console.log('✅ All button listeners re-initialized after DOOM.');
+                        }, 100);
+                    }
+                    
+                    // A Játékok menü újbóli megjelenítése.
+                    setTimeout(() => {
+                        appManagerRef.showGamesMenu();
+                        console.log('✅ Games dialog restored after DOOM exit');
+                    }, 200);
+                    
+                    // Az eredeti deactivate függvény visszaállítása a következő indításhoz.
+                    window.doomEasterEgg.deactivate = originalDeactivate;
+                };
+                
+                // 5. Indítsuk el a DOOM-ot. Ez felül fogja írni a globális vezérlőket a sajátjaival.
+                window.doomEasterEgg.activate();
+
+                // === JAVÍTÁS VÉGE ===
+            }
+        }
+    }        
 
     showCategoryDialog(title, items, onSelect) {
         const dialog = this.createDialog(title, 'category-dialog');
@@ -618,54 +761,95 @@ class NokiaAppManager {
     }
 
     navigateDialog(direction) {
-        if (this.dialogStack.length === 0) return;
-        
-        const context = this.dialogStack[this.dialogStack.length - 1];
-        const itemElements = context.element.querySelectorAll('.dialog-list-item');
-        
-        const previousIndex = context.selectedIndex;
-        
+    if (this.dialogStack.length === 0) return;
+
+    const context = this.dialogStack[this.dialogStack.length - 1];
+
+    const isGridDialog = context.element.classList.contains('games-dialog');
+    const itemElements = isGridDialog 
+        ? context.element.querySelectorAll('.game-icon-item')
+        : context.element.querySelectorAll('.dialog-list-item');
+    
+    if (isGridDialog) {
+        // Grid navigation (2 columns)
+        const gridCols = 2;
+        const totalItems = context.items.length;
+        const col = context.selectedIndex % gridCols;
+        const row = Math.floor(context.selectedIndex / gridCols);
+        const lastRow = Math.floor((totalItems - 1) / gridCols);
+
+        switch(direction) {
+            case 'up':
+                if (row > 0) {
+                    context.selectedIndex -= gridCols;
+                } else {
+                    // Wrap to the bottom row
+                    context.selectedIndex = lastRow * gridCols + col;
+                    // If the target spot in the last row is empty, go to the very last item
+                    if (context.selectedIndex >= totalItems) {
+                        context.selectedIndex = totalItems - 1;
+                    }
+                }
+                break;
+            
+            // === JAVÍTOTT LEFELÉ LOGIKA KEZDETE ===
+            case 'down':
+                // Ha az utolsó sorban vagyunk, ugorjunk fel az elejére ugyanabban az oszlopban.
+                if (row === lastRow) {
+                    context.selectedIndex = col;
+                } else {
+                    // Ha nem az utolsó sorban vagyunk, próbáljunk lejjebb lépni.
+                    const potentialNextIndex = context.selectedIndex + gridCols;
+                    
+                    // Ha a hely alattunk létezik, lépjünk oda.
+                    if (potentialNextIndex < totalItems) {
+                        context.selectedIndex = potentialNextIndex;
+                    } else {
+                        // Ha a hely alattunk üres (mert az utolsó sor rövidebb),
+                        // akkor ugorjunk a grid legutolsó elemére.
+                        context.selectedIndex = totalItems - 1;
+                    }
+                }
+                break;
+            // === JAVÍTOTT LEFELÉ LOGIKA VÉGE ===
+
+            case 'left':
+                context.selectedIndex = (context.selectedIndex - 1 + totalItems) % totalItems;
+                break;
+            case 'right':
+                context.selectedIndex = (context.selectedIndex + 1) % totalItems;
+                break;
+        }
+    } else {
+        // List navigation (original)
         if (direction === 'up') {
             context.selectedIndex = (context.selectedIndex - 1 + context.items.length) % context.items.length;
         } else if (direction === 'down') {
             context.selectedIndex = (context.selectedIndex + 1) % context.items.length;
         }
-        
-        const wrappedToStart = (direction === 'up' && previousIndex === 0);
-        const wrappedToEnd = (direction === 'down' && context.selectedIndex === 0);
-        
-        itemElements.forEach((item, index) => {
-            item.classList.toggle('selected', index === context.selectedIndex);
-        });
-        
-        // ✅ CENTERED SCROLL: Keep selected item centered (like ChatGPT Settings)
+    }
+    
+    // A .selected osztály frissítése az elemeken
+    itemElements.forEach((item, index) => {
+        item.classList.toggle('selected', index === context.selectedIndex);
+    });
+
+    // Görgetés a kiválasztott elemhez
+    setTimeout(() => {
         const selectedElement = itemElements[context.selectedIndex];
         if (selectedElement) {
-            const container = context.element.querySelector('.dialog-list');
-            if (container) {
-                if (wrappedToStart) {
-                    // Jumped to last item - scroll to bottom
-                    container.scrollTop = container.scrollHeight;
-                } else if (wrappedToEnd) {
-                    // Jumped to first item - scroll to top
-                    container.scrollTop = 0;
-                } else {
-                    // Normal navigation - keep item centered
-                    const itemTop = selectedElement.offsetTop;
-                    const itemHeight = selectedElement.offsetHeight;
-                    const containerHeight = container.clientHeight;
-                    
-                    // Calculate target scroll position to center the item
-                    const targetScroll = itemTop - (containerHeight / 2) + (itemHeight / 2);
-                    container.scrollTop = Math.max(0, Math.min(targetScroll, container.scrollHeight - containerHeight));
-                }
-            }
+            selectedElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
         }
-        
-        /* if (typeof playDTMF !== 'undefined') {
-            playDTMF(direction === 'up' ? '2' : '8');
-        } */
-    }
+    }, 10);
+    
+    /* if (typeof playDTMF !== 'undefined') {
+        playDTMF(direction === 'up' ? '2' : '8');
+    } */
+}
 
     selectDialogItem() {
         if (this.dialogStack.length === 0) return;

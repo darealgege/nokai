@@ -1,4 +1,4 @@
-const version = '1.5';
+const version = '1.51';
 
 // T9 character mappings
 /* const T9_MAP = {
@@ -73,6 +73,13 @@ window.lastKeyTime = 0;
 window.keyPressCount = 0;
 window.selectedVoiceModel = 0;
 window.conversationHistory = [];
+// ✅ UNIFIED HISTORY: Alias for backward compatibility
+Object.defineProperty(window, 'conversationHistory', {
+    get() {
+        return window.unifiedHistoryManager ? 
+            window.unifiedHistoryManager.getCurrentHistory() : [];
+    }
+});
 window.shiftMode = false;
 window.menuOpen = false;
 window.menuIndex = 0;
@@ -95,6 +102,7 @@ window.conversationHistory = [];
 
 // Storage keys
 const STORAGE_KEYS = {
+    HISTORIES: 'nokia_chat_histories', 
     CONVERSATION: 'nokia_chat_conversation',
     INPUT: 'nokia_chat_input',
     CURSOR: 'nokia_chat_cursor',
@@ -105,7 +113,7 @@ const STORAGE_KEYS = {
 };
 
 // Storage functions
-async function loadFromStorage() {
+/* async function loadFromStorage() {
     try {
         const savedConversation = localStorage.getItem(STORAGE_KEYS.CONVERSATION);
         const savedInput = localStorage.getItem(STORAGE_KEYS.INPUT);
@@ -134,11 +142,78 @@ async function loadFromStorage() {
     const inputMode = document.getElementById('inputMode');
     if (inputMode) inputMode.textContent = t9Mode ? 'T9' : 'Abc';        
     updateDisplay();
-}
+} */
+
+async function loadFromStorage() {
+    try {
+        // 1. Először az új, objektum alapú tárolót próbáljuk betölteni.
+        const savedHistories = localStorage.getItem(STORAGE_KEYS.HISTORIES);
+        if (savedHistories) {
+            window.conversationHistories = JSON.parse(savedHistories);
+        } else {
+            // 2. Ha az új formátum nem létezik, megpróbáljuk a régit (migráció).
+            const savedConversationLegacy = localStorage.getItem(STORAGE_KEYS.CONVERSATION_LEGACY);
+            if (savedConversationLegacy && savedConversationLegacy !== '[]') {
+                console.log('🔄 Migrating legacy conversation history to new format...');
+                // A régi előzményt a 'main' kulcs alá tesszük az új objektumban.
+                window.conversationHistories = {
+                    main: JSON.parse(savedConversationLegacy)
+                };
+                // Elmentjük az új formátumban, és töröljük a régit.
+                saveToStorage();
+                localStorage.removeItem(STORAGE_KEYS.CONVERSATION_LEGACY);
+            } else {
+                // Ha egyik sem létezik, létrehozzuk az alapértelmezett üres struktúrát.
+                window.conversationHistories = { main: [] };
+            }
+        }
+
+        // Biztosítjuk, hogy a 'main' kontextus mindig létezzen.
+        if (!window.conversationHistories.main) {
+            window.conversationHistories.main = [];
+        }
+
+        // 3. Beállítjuk az aktív előzményt a 'main' kontextusra.
+        // A többi kód (pl. restoreMessages) ezt a `window.conversationHistory` tömböt használja.
+        window.conversationHistory = window.conversationHistories.main;
+
+        // A többi beállítás betöltése változatlan
+        const savedInput = localStorage.getItem(STORAGE_KEYS.INPUT);
+        const savedCursor = localStorage.getItem(STORAGE_KEYS.CURSOR);
+        const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL);
+        const savedVoiceModel = localStorage.getItem(STORAGE_KEYS.VOICE_MODEL);
+        const savedT9 = localStorage.getItem(STORAGE_KEYS.T9MODE);
+        const savedLang = localStorage.getItem(STORAGE_KEYS.LANG);
+
+        if (window.conversationHistory.length > 0) {
+            const screenContent = document.getElementById('screenContent');
+            screenContent.querySelectorAll('.message').forEach(msg => msg.remove());
+            await restoreMessages();
+        }
+        if (savedInput) currentInput = savedInput;
+        if (savedCursor) cursorPosition = parseInt(savedCursor, 10) || 0;
+        if (savedModel) selectedModel = parseInt(savedModel, 10) || 0;
+        if (savedVoiceModel) window.selectedVoiceModel = parseInt(savedVoiceModel, 10) || 0;
+        if (savedT9) t9Mode = savedT9 === 'true';
+        if (savedLang) currentLang = savedLang;
+
+    } catch (e) {
+        console.error('Storage load error:', e);
+        window.conversationHistories = { main: [] };
+        window.conversationHistory = [];
+    }
+    const inputMode = document.getElementById('inputMode');
+    if (inputMode) inputMode.textContent = t9Mode ? 'T9' : 'Abc';        
+    updateDisplay();
+}    
 
 function saveToStorage() {
-    try {
-        localStorage.setItem(STORAGE_KEYS.CONVERSATION, JSON.stringify(window.conversationHistory));
+    try {        
+        // A régi, egyetlen előzmény mentése helyett...
+        // localStorage.setItem(STORAGE_KEYS.CONVERSATION, JSON.stringify(window.conversationHistory));
+        
+        // ...az új, objektum alapú tárolót mentjük, ami az összes profilt tartalmazza.
+        localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(window.conversationHistories || { main: [] }));
         localStorage.setItem(STORAGE_KEYS.INPUT, currentInput);
         localStorage.setItem(STORAGE_KEYS.CURSOR, cursorPosition.toString());
         localStorage.setItem(STORAGE_KEYS.MODEL, selectedModel.toString());
@@ -153,8 +228,9 @@ function saveToStorage() {
 async function restoreMessages() {
     const screenContent = document.getElementById('screenContent');
     const inputLine = screenContent.querySelector('.input-line');
+    const textMessages = window.conversationHistory.filter(msg => msg.type !== 'voice');
     
-    for (const msg of window.conversationHistory) {
+    for (const msg of textMessages) {
         const div = document.createElement('div');
         div.className = 'message ' + (msg.role === 'user' ? 'user-msg' : 'ai-msg');
         

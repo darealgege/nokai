@@ -1459,10 +1459,16 @@ window.handleCallEnd = function() {
         return;
     }
 
-    // 2. HÍVÁS MEGSZAKÍTÁSA (második legmagasabb prioritás)
+// 2. HÍVÁS MEGSZAKÍTÁSA (második legmagasabb prioritás)
     if (voiceHandler && voiceHandler.isActive()) {
         console.log('📞 Ending active call.');
         voiceHandler.endCall();
+
+        // ✅ ÚJ: A hívás befejezése után azonnal visszaállítjuk a kontextust a fő csevegésre.
+        // Ez a legfontosabb javítás, ami megakadályozza az előzmények keveredését.
+        console.log(`📞 Call ended. Resetting chat context from "${window.currentChatContextId}" to "main".`);
+        window.currentChatContextId = 'main';
+        
         return;
     }
 

@@ -332,6 +332,12 @@ class NokiaSearchHandler {
         return context;
     }
 
+    clearResults() {
+        console.log('🧹 Clearing previous search results from handler.');
+        this.braveResults = [];
+        this.perplexityResults = [];
+    }    
+
     isSearching() {
         return this.searchActive;
     }

@@ -419,7 +419,7 @@ class NokiaVoiceHandler {
                     try {
                         const weather = await getWeatherData();
                         if (weather) {
-                            weatherContext = `. ${weather}`;
+                            weatherContext = weather;
                         }
                     } catch (error) {
                         console.warn('Could not get weather for voice session:', error);
@@ -427,7 +427,22 @@ class NokiaVoiceHandler {
                 }
                 
                 // Get existing conversation history from main app
-                const existingHistory = window.conversationHistory || [];
+                //const existingHistory = window.conversationHistory || [];
+                //const existingHistory = window.conversationHistories[window.currentChatContextId] || [];
+                // ✅ UNIFIED HISTORY: Csak az AKTUÁLIS profile context-ét töltse be!
+                const contextId = profile ? 
+                    window.unifiedHistoryManager.getContextId(profile.filename) : 
+                    'main';
+
+                // Frissítjük a globális context-et
+                window.currentChatContextId = contextId;
+                window.unifiedHistoryManager.switchContext(contextId);
+
+                const existingHistory = window.unifiedHistoryManager.getHistory(contextId)
+                    .filter(msg => msg.type === 'text' || msg.type === 'voice') // Csak text/voice típusok
+                    .map(msg => ({ role: msg.role, content: msg.content }));
+
+                console.log(`📚 Voice: Loading ${existingHistory.length} messages for context "${contextId}"`);
                 //const profilePrompt = profile ? profile.prompt : null;
                 // Build instructions with profile prompt if provided
                 // IMPORTANT: This is only sent ONCE at session start, not with every message!
@@ -438,19 +453,42 @@ class NokiaVoiceHandler {
                     instructions = `Current date and time: ${dateTimeString}${weatherContext}. You are a helpful assistant on a Nokai phone. Keep responses concise and friendly. The user primarily speaks Hungarian (magyar nyelv). Always respond in the same language the user is speaking. When you see search results in brackets, use that information to answer accurately.`;
                 } */
 
-                let instructions = '';
-                                if (profilePrompt) {
-                                    instructions = `${profilePrompt}\n\nCurrent date and time: ${dateTimeString}${weatherContext}.`;
-                                } else {
-                                    instructions = `Current date and time: ${dateTimeString}${weatherContext}. You are a helpful assistant on a Nokai phone. Keep responses concise and friendly.`;
-                                }
+                 let finalProfilePrompt = profilePrompt;
 
-                                // ✅ JAVÍTÁS: Egységes és erősebb utasítások a kereséshez és a nyelvhez
-                                instructions += `\n\nIMPORTANT RULES:
-                1.  LANGUAGE: ALWAYS respond in the SAME language the user is speaking. If they speak Hungarian, you MUST respond in Hungarian.
-                2.  SEARCH RESULTS: If you are provided with [SEARCH RESULTS] in a subsequent message, you MUST use that information to answer the user's original question accurately. Announce that you are using fresh information, for example by saying "I just looked it up..." or "According to the latest information...".`;                    
+                // ✅ ÚJ: A prompt "levágása" a szótár-szekció előtt.
+                if (finalProfilePrompt) {
+                    const dictionaryMarker = '// =============================================================================\n// DICTIONARY - USE IT TO PHRASE YOUR SENTENCES: CIGÁNY—MAGYAR SZÓTÁR \n// =============================================================================';
+                    const markerIndex = finalProfilePrompt.indexOf(dictionaryMarker);
+
+                    if (markerIndex !== -1) {
+                        console.log('✂️ Dictionary section found in prompt. Truncating...');
+                        finalProfilePrompt = finalProfilePrompt.substring(0, markerIndex).trim();
+                    }
+                }
+
+                let instructions = '';
+                if (finalProfilePrompt) {
+                    instructions = `${finalProfilePrompt}\n\n`;
+                } else {
+                    instructions = `You are a helpful assistant on a Nokai phone. Keep responses concise and friendly.\n\n`;
+                }
+
+                instructions += `[BACKGROUND INFO - Use ONLY if asked]\nCurrent date and time: ${dateTimeString}.`;
+
+                if (weatherContext) {
+                    instructions += `\n${weatherContext}`;
+                }
+                
+                instructions += `\n[END BACKGROUND INFO]`;
+
+                instructions += `\n\nIMPORTANT RULES:`;
+                instructions += `\n 1. LANGUAGE: ALWAYS respond in the SAME language the user is speaking. If they speak Hungarian, you MUST respond in Hungarian.`;
+                instructions += `\n 2. TIME/DATE: The current time will be updated automatically after each user message. Only mention it if explicitly asked.`;
+                instructions += `\n 3. SEARCH RESULTS PRIORITY: If [SEARCH RESULTS] appear later, use them to answer, not the background info.`;
+                instructions += `\n 4. BACKGROUND INFO: Only mention weather/location/time if user explicitly asks. Do NOT volunteer this information in greetings.`;
                 
                 // Configure session for better transcription
+                //console.log("Instructions: " + instructions);
                 dataChannel.send(JSON.stringify({
                     type: 'session.update',
                     session: {
@@ -475,8 +513,11 @@ class NokiaVoiceHandler {
 // IMPORTANT: Limit to last 20 messages to avoid hitting context limits!
 if (existingHistory.length > 0) {
     const maxMessages = 20;
+    /* const recentHistory = existingHistory.slice(-maxMessages);
+    console.log(`📚 Loading last ${recentHistory.length} messages (of ${existingHistory.length} total) into voice context`); */
+
     const recentHistory = existingHistory.slice(-maxMessages);
-    console.log(`📚 Loading last ${recentHistory.length} messages (of ${existingHistory.length} total) into voice context`);
+    console.log(`📚 Loading last ${recentHistory.length} messages (of ${existingHistory.length} total) for context "${window.currentChatContextId}"`);    
 
     const buildContentForRole = (role, msg) => {
         // Normalize incoming msg.content into an array of content items
@@ -589,6 +630,7 @@ if (existingHistory.length > 0) {
                     response: {
                         modalities: ['audio', 'text'],
                         instructions: `Respond to the "[New call started]" message by picking up the phone and saying ONLY "Hello?" with rising intonation. Just one word. Nothing else.`
+
                     }
                 }));
                 };
@@ -784,8 +826,9 @@ if (existingHistory.length > 0) {
 
     // Exchange SDP with OpenAI
     async exchangeSDP(sdp) {
+        const selectedModelName = VOICE_MODELS[window.selectedVoiceModel];
         const response = await fetch(
-            'https://api.openai.com/v1/realtime?model=gpt-realtime-2025-08-28',
+            `https://api.openai.com/v1/realtime?model=${selectedModelName}`,
             {
                 method: 'POST',
                 headers: {
@@ -801,6 +844,43 @@ if (existingHistory.length > 0) {
         }
 
         return await response.text();
+    }
+
+    // Send current date/time to AI (called after each user input)
+    sendCurrentTimeToAI() {
+        if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+            return;
+        }
+        
+        const now = new Date();
+        const dateTimeString = now.toLocaleString('hu-HU', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false 
+        });
+        
+        console.log(`⏰ Updating AI with current time: ${dateTimeString}`);
+        
+        try {
+            // Add a system message with current time as background info
+            this.dataChannel.send(JSON.stringify({
+                type: 'conversation.item.create',
+                item: {
+                    type: 'message',
+                    role: 'system',
+                    content: [{
+                        type: 'input_text',
+                        text: `[CURRENT TIME UPDATE - Only mention if user asks about time/date]\nCurrent date and time: ${dateTimeString}\n[END TIME UPDATE]`
+                    }]
+                }
+            }));
+        } catch (error) {
+            console.warn('⚠️ Failed to send time update:', error);
+        }
     }
 
     // Handle realtime events from OpenAI
@@ -819,6 +899,10 @@ if (existingHistory.length > 0) {
                     if (this.onTranscriptReceived) {
                         this.onTranscriptReceived('user', event.transcript);
                     }
+                    
+                    // ✅ Új: Friss idő elküldése a felhasználói beszéd után
+                    // De csak akkor mondja vissza, ha kérdezik
+                    this.sendCurrentTimeToAI();
                 }
                 break;
 

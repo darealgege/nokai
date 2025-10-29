@@ -5,7 +5,7 @@
 /* Camera App */
 .camera-container {
     position: absolute;
-    top: 21px;
+    top: 20px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -83,11 +83,11 @@
 /* Gallery App */
 .gallery-container {
     position: absolute;
-    top: 21px;
+    top: 20px;
     left: 0;
     right: 0;
     bottom: 0;
-    background: #9db891;
+    /* background: #9db891; */
     display: flex;
     flex-direction: column;
     z-index: 100;
