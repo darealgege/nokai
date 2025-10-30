@@ -1,0 +1,2583 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Disable iOS double-tap zoom */
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+    background: linear-gradient(145deg, #1111116b, rgb(0 0 0 / 59%));
+    padding: 10px;
+    overflow: hidden; /* alapból tiltjuk a scrollt */
+    overflow-y: auto;
+}
+
+body.content-tall {
+    overflow-y: auto; /* ha túl magas a tartalom, engedélyezzük a scrollt */
+}
+
+.phone-container {
+    position: relative;
+    width: 340px;
+    background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+    border-radius: 35px 35px 40px 40px;
+    box-shadow: 
+        0 20px 60px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.1);
+    padding: 25px 20px 20px 20px;
+    min-width: 340px;
+}
+
+.phone-top {
+    /* height: 45px; */
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-bottom: 15px; */
+    margin-bottom: 15px;
+}
+
+.phone-bottom {
+    /* height: 45px; */
+    height: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-bottom: 15px; */
+    margin-bottom: 0px;
+}
+
+.speaker {
+    width: 80px;
+    height: 8px;
+    background: #111;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.microphone {
+    width: 10px;
+    height: 8px;
+    background: #111;
+    border-radius: 4px;
+    /* box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); */
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.nokia-brand {
+    text-align: center;
+    /* margin-bottom: 15px; */
+    margin-bottom: 10px;
+    color: #888;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+
+.screen-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 8px;
+    /* margin-bottom: 20px; */
+    margin-bottom: 8px;    
+    box-shadow: 
+        inset 0 2px 8px rgba(0,0,0,0.8),
+        0 1px 2px rgba(255,255,255,0.1);
+}
+
+.screen {
+    width: 100%;
+    height: 200px;
+    background: #9db891;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+   /*  font-family: 'Courier New', monospace; */
+    font-size: 15px;
+    color: #1a3a1a;
+}
+
+/* ✅ ÚJ, JAVÍTOTT KÓD: Illeszd be ezt a blokkot a .screen szabály után */
+.screen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0, 0, 0, 0.03) 1px,
+        rgba(0, 0, 0, 0.03) 2.4px
+    );
+    z-index: 2000; /* Magas z-index, hogy minden app és dialógus fölött legyen */
+    pointer-events: none; /* Kritikus, hogy ne blokkolja a kattintásokat! */
+    box-shadow: 
+        inset 0 2px 8px rgba(0,0,0,0.8),
+        0 1px 2px rgba(255,255,255,0.1);
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: rgba(26, 58, 26, 0.2);
+    font-size: 9px;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(26, 58, 26, 0.3);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.status-left {
+    display: flex;
+    align-items: anchor-center;
+    gap: 3px;
+}
+
+#shiftIndicator {
+    /* A grayscale és opacity mehet egy közös szabályba a többi ikonnal */
+    font-size: 90%;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0px; /* Egy kis térköz az elválasztó előtt */
+}
+
+#shiftSeparator {
+    /* Ez biztosítja, hogy az elválasztó ne legyen grayscale */
+    filter: none;
+    opacity: 1;
+   /*  margin-right: 4px; */ /* Térköz a T9/Abc jelző előtt */
+}
+
+/* Közös szabály a grayscale ikonoknak */
+.antenna-icon,
+.charging-icon,
+.call-status,
+#shiftIndicator,
+.new-message-indicator {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    font-size: 8px;
+}
+
+/* ✅ ÚJ üzenet indikátor */
+.new-message-indicator {
+    font-size: 8px;
+    margin-left: 3px;
+    animation: envelope-pulse 2s ease-in-out infinite;
+}
+
+@keyframes envelope-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    /* height: 8px; */
+}
+
+.signal-bar {
+    width: 2px;
+    background: #1a3a1a;
+    transition: opacity 0.3s;
+}
+
+.signal-bar:nth-child(1) { height: 2px; }
+.signal-bar:nth-child(2) { height: 4px; }
+.signal-bar:nth-child(3) { height: 6px; }
+.signal-bar:nth-child(4) { height: 8px; }
+.signal-bar:nth-child(5) { height: 10px; }
+
+.signal-bar.inactive {
+    opacity: 0.2;
+}
+
+.network-type {
+    font-weight: bold;
+    font-size: 8px;
+}
+
+.status-right {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.battery-icon {
+    width: 20px; /* Kicsit szélesebb a jobb olvashatóságért */
+    height: 10px;
+    border: 1px solid #1a3a1a;
+    border-radius: 2px; /* Finomabb lekerekítés */
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* padding: 1px; */
+}
+
+/* ✅ JAVÍTÁS: A "pöcök" visszaállítása és pontos pozicionálása */
+.battery-icon::after {
+    content: '';
+    position: absolute;
+    right: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 4px;
+    background: #1a3a1a;
+    border-radius: 0 1px 1px 0;
+}
+
+.battery-fill {
+    height: 100%;
+    background: #1a3a1a;
+    border-radius: 0.5px;
+    transition: width 0.5s ease-in-out;
+    /* ✅ KULCSFONTOSSÁGÚ: A belső elem pozicionálásához és a vágáshoz */
+    position: relative; 
+    overflow: hidden; 
+}
+
+/* ✅ ÚJ: A háttérben lévő, mindig látható sötét szöveg ("szellemkép") */
+.battery-percentage-background {
+    position: absolute;
+    top: 0;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    font-size: 7px; /* Kicsit nagyobb, jobban látható */
+    font-weight: bold;
+    color: #1a3a1a; /* Sötét szín */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    z-index: 1; /* A csík mögött van */
+}
+
+/* ✅ ÚJ: Az előtérben lévő, világos szöveg, ami a csíkon belül van */
+.battery-percentage-overlay {
+    position: absolute;
+    top: 0;
+    left: -1px;
+    /* ✅ FONTOS: A szélessége fix, a szülő (.battery-fill) vágja le */
+    width: 20px; /* A .battery-icon belső szélessége */
+    height: 100%;
+    font-size: 7px;
+    font-weight: bold;
+    color: #9db891; /* Világos szín (képernyő háttér) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    z-index: 2; /* A csík felett van */
+}
+
+/* ✅ JAVÍTOTT: Az animáció most már csak a háttérszínt változtatja */
+.battery-fill.charging-animation {
+    animation: charge-animation 1.5s infinite ease-in-out;
+}
+
+@keyframes charge-animation {
+    0%, 100% {
+        background-color: #1a3a1a;
+    }
+    50% {
+        /* Egy kicsit világosabb árnyalat az animációhoz */
+        background-color: #2b5a2b; 
+    }
+}
+
+.screen-content {
+    padding: 8px;
+    height: calc(100% - 20px);
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Egységes scrollbar stílus a chat és a menü számára is */
+.screen-content::-webkit-scrollbar,
+.menu-screen::-webkit-scrollbar {
+    width: 4px;
+}
+
+.screen-content::-webkit-scrollbar-thumb,
+.menu-screen::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.message {
+    margin-bottom: 8px;
+    line-height: 1.3;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    filter: grayscale(100%);
+    opacity: 0.95;
+    width: auto;
+}
+
+.message a {
+    color: #1a3a1a;
+    text-decoration: underline;    
+    filter: grayscale(100%);
+    opacity: 0.95;
+}
+
+/* ✅ Általános link stílus mindenhol */
+.retro-link {
+    color: #1a3a1a;
+    text-decoration: underline;
+    word-break: break-all;  /* Hosszú linkek törése */
+    cursor: pointer;
+    filter: grayscale(100%);
+    opacity: 0.95;
+}
+
+.user-msg {
+    font-weight: bold;
+    text-shadow: 0.3px 0.5px grey;
+}
+
+.ai-msg {
+    margin-left: 4px;
+    text-shadow: 0.8px 0.45px grey;
+}
+
+.input-line {
+    display: flex;
+    align-items: flex-start;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #1a3a1a;
+    white-space: pre-wrap;
+    text-shadow: 0px 1px 1px grey;
+}
+
+/* Grayscale az input szövegre is (beleértve az emoji-kat) */
+#inputText {
+    filter: grayscale(100%);
+    font-size: 16px;
+    opacity: 0.75;
+    text-shadow: 0px 1px 1px grey;
+}
+
+.cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background: #1a3a1a;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+    flex-shrink: 0;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+/* .menu-screen {
+    display: none;
+    padding: 8px;
+    
+}
+ */
+
+.menu-screen {
+    display: none;
+    padding: 8px;
+    /* ÚJ SOROK: Magasság és scroll viselkedés beállítása */
+    height: calc(100% - 20px); /* Kitölti a rendelkezésre álló helyet a status bar alatt */
+    overflow-y: auto;         /* Csak akkor jelenik meg a scrollbar, ha szükséges */
+    width: 284px;
+}
+
+.menu-screen.active {
+    display: block;
+}
+
+.menu-item {
+    padding: 4px;
+    margin: 2px 0;    
+    /* Grayscale for all content including emojis */
+    /* filter: grayscale(100%); */
+}
+
+/* Add extra spacing after the last menu item */
+.menu-item:last-child {
+    margin-bottom: 8px;
+}
+
+.menu-item.selected {
+    background: #1a3a1a;
+    color: #9db891;
+}
+
+.dpad {
+    flex: 1;
+    position: relative;
+    max-width: 110px;
+    height: 110px;
+    display: grid;
+    grid-template-areas:
+        ". up ."
+        "left center right"
+        ". down .";
+    /* grid-template-columns: 26px 33px 26px;
+    grid-template-rows: 26px 33px 26px; */
+}
+
+.dpad button {
+    background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+    transition: all 0.1s;
+    margin: 2px;
+}
+
+.dpad button:active {
+    transform: scale(0.95);
+}
+
+.dpad-up { grid-area: up; border-radius: 8px 8px 0 0; }
+.dpad-down { grid-area: down; border-radius: 0 0 8px 8px; }
+.dpad-left { grid-area: left; border-radius: 8px 0 0 8px; }
+.dpad-right { grid-area: right; border-radius: 0 8px 8px 0; }
+.dpad-center {
+    grid-area: center;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #555, #444);
+    font-size: 9px;
+    font-weight: bold;
+}
+
+/* Call buttons - round and compact */
+.call-controls {
+    display: flex;
+    justify-content: space-between; /* A két gombot a konténer két szélére tolja */
+    align-items: center;
+    padding: 0 10px; /* Behúzás balról és jobbról, hogy ne legyenek teljesen a szélén */
+    margin-bottom: 25px; /* Egy kis térköz a számbillentyűzet felett */
+}
+
+.call-button {
+    width: 45px;
+    height: 45px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+    transition: all 0.15s;
+    padding: 0;
+}
+
+.call-button svg {
+    width: 26px;
+    height: 26px;
+}
+
+.call-button:active {
+    transform: scale(0.95);
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+.call-button:disabled {
+    /* background: #555; */ /* Sötétebb, inaktív szín */
+   /*  opacity: 0.5; */      /* Halványabbá teszi */
+    cursor: not-allowed; /* Jelzi, hogy nem kattintható */
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4); /* Laposabb hatás */
+}
+
+.call-start {
+    background: linear-gradient(145deg, #27ae60, #229954);
+    color: white;
+}
+
+.call-start:hover {
+    background: linear-gradient(145deg, #2ecc71, #27ae60);
+}
+
+.call-end {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.call-end:hover {
+    background: linear-gradient(145deg, #ec7063, #e74c3c);
+}
+
+/* Call status indicator with blink animation */
+@keyframes callBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Compact controls row: MENU | D-PAD | C */
+.controls-compact {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: -60px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.nav-key {
+    flex: 0 0 auto;
+    width: 55px;
+    padding: 5px 8px;
+    background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+    transition: all 0.1s;
+}
+
+.nav-key:active { transform: translateY(1px); }
+.key-clear { background: linear-gradient(145deg, #e74c3c, #c0392b); }
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-left: 7px;
+    padding-right: 7px;    
+    margin-bottom: 15px;
+}
+
+.key {
+    width: 65px;
+    height: 65px;
+    background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+    transition: all 0.1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.key:active {
+    transform: translateY(2px);
+    box-shadow: 
+        0 1px 3px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+.key-number { font-size: 20px; line-height: 1; }
+.key-letters { font-size: 7px; opacity: 0.7; letter-spacing: 0.5px; margin-top: 2px; }
+.key-star, .key-hash { font-size: 26px; }
+.key-0 { grid-column: 2; }
+
+#fullscreenBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    /* background: linear-gradient(145deg, #667eea, #764ba2); */
+    background: linear-gradient(145deg, #1111116b, rgb(0 0 0 / 59%));
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+#fullscreenBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+#fullscreenBtn:active {
+    transform: scale(0.95);
+}
+
+
+/* Segédosztály az elemek elrejtéséhez */
+.hidden {
+    display: none !important;
+}
+
+/* A törlést megerősítő párbeszédablak stílusa */
+#confirmDialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    background-color: #9db891; /* A képernyő háttérszíne */
+    border: 1px solid #1a3a1a; /* A képernyő szövegszíne */
+    padding: 15px;
+    z-index: 600; /* ✅ HIGHEST - above Gallery (100), above fullscreen viewer (500) */
+    color: #1a3a1a;
+    text-align: center;
+    /* ✅ Finom árnyék */
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#confirmText {
+    margin-bottom: 10px;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.dialog-options {
+    margin-top: 10px;
+}
+
+.dialog-options span {
+    padding: 4px 8px;
+    margin: 0 5px;    
+}
+
+/* A kiválasztott opció stílusa (megegyezik a menüpontok stílusával) */
+.dialog-options span.selected {
+    background: #1a3a1a;
+    color: #9db891;
+}
+
+#shiftIndicator {
+    font-weight: bold;
+    margin-right: 0px; /* Egy kis térköz a következő elem előtt */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ===========================
+   Mobilos tap highlight kikapcsolása
+   =========================== */
+button,
+.key,
+.nav-key,
+.call-button,
+.dpad button {
+    -webkit-tap-highlight-color: transparent; /* iOS és Android */
+    outline: none;        /* ne legyen kék keret fókusznál */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#saveIndicator {
+    /* Alapállapot: rejtett és áttetsző */
+    display: none;
+    opacity: 0;
+    
+    /* Kinézet */
+    filter: grayscale(100%);
+    font-size: 8px;
+    margin-right: 0px;
+    
+    /* Animáció előkészítése */
+    transition: opacity 0.5s ease-in-out;
+}
+
+#saveSeparator {
+    /* Nincs alapértelmezett rejtés, csak a .hidden osztály számít! */
+    margin-right: 0px;
+}
+
+/* Az IKON animációját elindító osztály */
+#saveIndicator.animate {
+    display: inline-flex; /* Láthatóvá tesszük */
+    align-items: center;
+    animation: fadeInOut 1s ease-in-out;
+}
+
+/* Maga a fade-in-out animáció (ez változatlan) */
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    25% { opacity: 0.8; }
+    75% { opacity: 0.8; }
+    100% { opacity: 0; }
+}
+
+/* Profile selection dialog styles */
+#profileDialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%;
+    max-height: 78%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 200; /* MAGASABB mint app-dialog (100) */
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.profile-dialog-content {
+    display: flex;
+    flex-direction: column;
+    /* gap: 8px; */
+}
+
+.profile-dialog-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 10px;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #1a3a1a;
+    font-family: sans-serif;
+}
+
+.profile-dialog-scroll {
+    text-align: center;
+    font-size: 10px;
+    opacity: 0.7;
+    margin-bottom: 2px;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.profile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-height: 100px;
+    overflow: hidden;
+}
+
+.profile-item {
+    padding: 3px 6px;
+    font-size: 12px;    
+    transition: background 0.2s;
+    /* Grayscale for emojis */
+    /* filter: grayscale(100%); */
+    font-family: sans-serif;        
+}
+
+.profile-item.selected {
+    background: #1a3a1a;
+    color: #9db891;
+    font-weight: bold;
+    font-family: sans-serif;
+    border-radius: 4px;
+}
+
+.profile-dialog-hint {
+    text-align: center;
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 3px;
+    padding-top: 3px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+/* Profile item emoji */
+.profile-item-emoji {
+    filter: grayscale(100%);
+    opacity: 0.6;
+    margin-right: 4px;
+}
+
+.profile-item.selected .profile-item-emoji {
+    filter: grayscale(100%);
+    opacity: 0.8;
+}
+
+/* About dialog styles */
+#aboutDialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92%;
+    max-height: 97%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 200; /* MAGASABB mint app-dialog (100) */
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.about-dialog-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.about-dialog-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #1a3a1a;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+.about-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 5px 3px;
+    font-size: 12px;
+    min-height: 0;
+    /* Grayscale for all content including emojis */
+    filter: grayscale(100%);
+    font-family: sans-serif;
+}
+
+.about-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.about-content::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.5);
+    border-radius: 2px;
+}
+
+.about-section {
+    margin-bottom: 10px;
+}
+
+.about-header {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.about-text {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 2px;
+    padding-left: 12px;
+    text-indent: -12px;
+}
+
+.about-dialog-hint {
+    text-align: center;
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+/* ===========================
+   Home Screen & App Manager Styles
+   =========================== */
+
+/* Home Screen Container */
+.home-screen {
+    position: absolute;
+    top: 20px; /* After status bar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* ✅ VISSZA: center */
+    align-items: center;
+    padding: 10px;
+    z-index: 1;
+    overflow-y: auto; /* Scroll engedélyezve */
+    overflow-x: hidden;
+}
+
+/* ✅ Scrollbar stílus */
+.home-screen::-webkit-scrollbar {
+    width: 4px;
+}
+
+.home-screen::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+/* App Grid - 3 columns */
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 270px;
+    margin-bottom: 20px;
+    margin-top: auto; /* ✅ ÚJ: Centered vertically */
+    margin-bottom: auto; /* ✅ ÚJ: Centered vertically */
+}
+
+/* Individual App Icon */
+.app-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    /* cursor: pointer; */
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.app-icon .icon {
+    font-size: 36px;
+    margin-bottom: 4px;
+    /* Pixelated effect for emojis */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    /* Grayscale filter */
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.65;
+    line-height: 1;
+}
+
+/* Image icons (like DOOM) */
+.app-icon .icon img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.6;
+}
+
+.app-icon .label {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.8;
+    font-family: sans-serif;
+}
+
+/* Selected app icon */
+.app-icon.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    transform: scale(1.05);
+}
+
+.app-icon.selected .icon {
+    filter: grayscale(100%) drop-shadow(1px 4px 2px black);
+    opacity: 0.6;
+}
+
+.app-icon.selected .label {
+    color: #9db891;
+    opacity: 1;
+    font-family: sans-serif;
+}
+
+/* Home screen hint */
+.home-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* ===========================
+   App Dialogs (Settings, Games, etc.)
+   =========================== */
+
+.app-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-height: 85%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 100;
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.dialog-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a3a1a;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+.dialog-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 2px;
+    min-height: 0;
+    max-height: 130px;
+}
+
+.dialog-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dialog-list::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.4);
+    border-radius: 2px;
+}
+
+/* Dialog List Item */
+.dialog-list-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    margin: 2px 0;
+    /* cursor: pointer; */
+    transition: background 0.2s;
+    border-radius: 3px;
+}
+
+.dialog-list-item-emoji {
+    font-size: 18px;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    margin-right: 6px;
+}
+
+.dialog-list-item .item-icon {
+    font-size: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    /* Pixelated & grayscale */
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Image icons in dialogs */
+.dialog-list-item .item-icon img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    display: block;
+}
+
+.dialog-list-item .item-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: sans-serif;
+}
+
+/* Settings-specific styling */
+.settings-item .item-value {
+    font-size: 10px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: rgba(26, 58, 26, 0.15);
+    border-radius: 3px;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    font-family: sans-serif;
+}
+
+.settings-item.selected .item-value {
+    background: #9db891;
+    color: #1a3a1a;
+    font-weight: bold;
+}
+
+/* Settings item emoji (AI Profile esetén) */
+.settings-item-emoji {
+    font-size: 14px;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    margin-left: 8px;
+    margin-right: 4px;
+}
+
+/* Settings item profile name (AI Profile esetén) */
+.settings-item-profile-name {
+    font-size: 10px;
+    /* Normál szöveg, nincs grayscale */
+}
+
+/* Selected állapotban is csak az emoji marad grayscale */
+.settings-item.selected .settings-item-emoji {
+    filter: grayscale(100%);
+    opacity: 0.8;
+}
+
+/* Dialog hint at bottom */
+.dialog-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+/* ChatGPT App Settings Menu */
+.chatgpt-settings-menu {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #9db891;
+    z-index: 50;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.chatgpt-settings-menu .dialog-title {
+    border-bottom: 1px solid #1a3a1a;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+}
+/* ===========================
+   Home Screen & App Manager Styles
+   =========================== */
+
+/* Home Screen Container */
+.home-screen {
+    position: absolute;
+    top: 20px; /* After status bar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* ✅ VISSZA: center */
+    align-items: center;
+    padding: 10px;
+    z-index: 1;
+    overflow-y: auto; /* Scroll engedélyezve */
+    overflow-x: hidden;
+}
+
+/* App Grid - 3 columns */
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 270px;
+    margin-bottom: 20px;
+    margin-top: auto; /* ✅ ÚJ: Centered vertically */
+    margin-bottom: auto; /* ✅ ÚJ: Centered vertically */
+}
+
+/* Individual App Icon */
+.app-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    /* cursor: pointer; */
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.app-icon .icon {
+    font-size: 36px;
+    margin-bottom: 4px;
+    /* Pixelated effect for emojis */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    /* Grayscale filter */
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Image icons (like DOOM) */
+.app-icon .icon img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.6;
+}
+
+.app-icon .label {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.8;
+    font-family: sans-serif;
+}
+
+/* Selected app icon */
+.app-icon.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    transform: scale(1.05);
+}
+
+.app-icon.selected .icon {
+    filter: grayscale(100%) drop-shadow(1px 4px 2px black);
+    opacity: 0.6;
+}
+
+.app-icon.selected .label {
+    color: #9db891;
+    opacity: 1;
+    font-family: sans-serif;
+}
+
+/* Home screen hint */
+.home-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* ===========================
+   App Dialogs (Settings, Games, etc.)
+   =========================== */
+
+.app-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-height: 85%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 100;
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.dialog-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a3a1a;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+.dialog-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 2px;
+    min-height: 0;
+    max-height: 130px;
+}
+
+.dialog-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dialog-list::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.4);
+    border-radius: 2px;
+}
+
+/* Dialog List Item */
+.dialog-list-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    margin: 2px 0;
+    /* cursor: pointer; */
+    transition: background 0.2s;
+    border-radius: 3px;
+}
+
+.dialog-list-item .item-icon {
+    font-size: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    /* Pixelated & grayscale */
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Image icons in dialogs */
+.dialog-list-item .item-icon img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    display: block;
+}
+
+.dialog-list-item .item-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: sans-serif;
+}
+
+.dialog-list-item.selected {
+    background: #1a3a1a;
+    color: #9db891;
+    font-weight: bold;
+}
+
+.dialog-list-item.selected .item-icon {
+    filter: grayscale(100%);
+    opacity: 0.8;
+}
+
+.dialog-list-item-emoji {
+    font-size: 18px;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    margin-right: 6px;
+}
+
+.dialog-list-item.selected .dialog-list-item-emoji {
+    filter: grayscale(100%);
+    opacity: 0.8;
+}
+
+/* Settings-specific styling */
+.settings-item .item-value {
+    font-size: 10px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: rgba(26, 58, 26, 0.15);
+    border-radius: 3px;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    font-family: sans-serif;
+}
+
+.settings-item.selected .item-value {
+    background: #9db891;
+    color: #1a3a1a;
+    font-weight: bold;
+}
+
+/* Dialog hint at bottom */
+.dialog-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+/* ChatGPT App Settings Menu */
+.chatgpt-settings-menu {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #9db891;
+    z-index: 50;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.chatgpt-settings-menu .dialog-title {
+    border-bottom: 1px solid #1a3a1a;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+}
+/* ===========================
+   Home Screen & App Manager Styles
+   =========================== */
+
+/* Home Screen Container */
+.home-screen {
+    position: absolute;
+    top: 20px; /* After status bar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* ✅ VISSZA: center */
+    align-items: center;
+    padding: 10px;
+    z-index: 1;
+    /*overflow-y: auto; */ /* Scroll engedélyezve */
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+/* App Grid - 3 columns */
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 270px;
+    margin-bottom: 20px;
+    margin-top: auto; /* ✅ ÚJ: Centered vertically */
+    margin-bottom: auto; /* ✅ ÚJ: Centered vertically */
+}
+
+/* Individual App Icon */
+.app-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    /* cursor: pointer; */
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.app-icon .icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+    /* Pixelated effect for emojis */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    /* Grayscale filter */
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Image icons (like DOOM) */
+.app-icon .icon img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);       
+    opacity: 0.6;
+}
+
+.app-icon .label {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.8;
+    font-family: sans-serif;
+    text-shadow: 0px 0px 0px rgba(0, 0, 0, 0.8);
+}
+
+/* Selected app icon */
+.app-icon.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    transform: scale(1.05);
+}
+
+.app-icon.selected .icon {
+    filter: grayscale(100%) drop-shadow(1px 4px 2px black);
+    opacity: 0.6;
+}
+
+.app-icon.selected .label {
+    color: #9db891;
+    opacity: 1;
+    font-family: sans-serif;
+}
+
+/* Home screen hint */
+.home-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* ===========================
+   App Dialogs (Settings, Games, etc.)
+   =========================== */
+
+.app-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-height: 95%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 100;
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.dialog-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a3a1a;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+.dialog-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 2px;
+    min-height: 0;
+    max-height: 130px;
+    /* filter: grayscale(1);   */      
+}
+
+.dialog-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dialog-list::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.4);
+    border-radius: 2px;
+}
+
+/* Dialog List Item */
+.dialog-list-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    margin: 2px 0;
+    /* cursor: pointer; */
+    transition: background 0.2s;
+    border-radius: 3px;
+}
+
+.dialog-list-item .item-icon {
+    font-size: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    /* Pixelated & grayscale */
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Image icons in dialogs */
+.dialog-list-item .item-icon img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    display: block;
+}
+
+.dialog-list-item .item-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: sans-serif;
+}
+
+
+.item-icon {
+    filter: grayscale(100%);
+    opacity: 1;
+}
+
+/* Settings-specific styling */
+.settings-item .item-value {
+    font-size: 10px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: rgba(26, 58, 26, 0.15);
+    border-radius: 3px;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    font-family: sans-serif;
+}
+
+.settings-item.selected .item-value {
+    background: #9db891;
+    color: #1a3a1a;
+    font-weight: bold;
+}
+
+/* Dialog hint at bottom */
+.dialog-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    margin-top: 3px;
+    padding-top: 3px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    flex-shrink: 0;
+    font-family: sans-serif;
+}
+
+/* ===========================
+   Messages App - Message Bubbles & Timestamps
+   =========================== */
+
+.message-bubble {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+.msg-user {
+    background: rgba(26, 58, 26, 0.15);
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.msg-ai {
+    background: rgba(26, 58, 26, 0.08);
+    align-self: flex-start;
+}
+
+.msg-text {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    filter: grayscale(100%);
+}
+
+.msg-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-top: 4px;
+    filter: grayscale(100%);
+    display: block;
+}
+
+.msg-timestamp {
+    font-size: 9px;
+    opacity: 0.6;
+    margin-top: 2px;
+    font-weight: bold;
+    filter: grayscale(100%);
+}
+
+/* ChatGPT App Settings Menu */
+.chatgpt-settings-menu {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #9db891;
+    z-index: 50;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.chatgpt-settings-menu .dialog-title {
+    border-bottom: 1px solid #1a3a1a;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+}
+
+/* ===========================
+   CSS FIXES - Add these to nokia_style.css or replace existing rules
+   =========================== */
+
+/* ✅ FIX: Disable touch highlight and pointer on screen icons */
+.app-icon,
+.dialog-list-item,
+.profile-item,
+.menu-item,
+.about-content,
+.screen-content {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default; /* Ne legyen pointer cursor */
+}
+
+/* ✅ FIX: Screen content should not show pointer */
+.screen {
+    cursor: default;
+}
+
+/* ✅ FIX: App icons should not show pointer */
+.app-icon,
+.app-icon * {
+    cursor: default !important;
+}
+
+/* ✅ FIX: Dialog items should not show pointer */
+.dialog-list-item,
+.dialog-list-item * {
+    cursor: default !important;
+    /* filter: grayscale(1); */
+    font-weight: bold;
+}
+
+/* ✅ FIX: Better app icon opacity for visibility */
+.app-icon .icon {
+    filter: grayscale(100%) contrast(1.0) drop-shadow(1px 4px 2px black);    
+    opacity: 0.75; /* Increased from 0.6 for better visibility */
+}
+
+/* ✅ FIX: Better selected icon visibility */
+.app-icon.selected .icon {
+    filter: grayscale(100%) drop-shadow(1px 4px 2px black);
+    opacity: 0.85; /* Increased from 0.6 */
+}
+
+/* ✅ FIX: ChatGPT Settings Dialog (new class for distinction) */
+.chatgpt-settings-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-height: 95%;
+    background-color: #9db891;
+    border: 1px solid #1a3a1a;
+    padding: 10px;
+    z-index: 150; /* Between app-dialog (100) and profile (200) */
+    color: #1a3a1a;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✅ Make sure all screen elements use default cursor */
+.screen * {
+    cursor: default;
+}
+
+/* But keep pointer for actual interactive elements */
+button,
+.key,
+.nav-key,
+.call-button,
+.dpad button {
+    cursor: pointer !important;
+}
+
+/* ===========================
+   In Call Screen Styles
+   =========================== */
+
+.in-call-screen {
+    position: absolute;
+    top: 21px; /* Status bar után */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background-color: #9db891; */ /* Nokia zöld háttér */
+    z-index: 500; /* Minden más felett */
+    color: #1a3a1a;
+    display: flex;
+    flex-direction: column;
+    /* padding: 4px 4px 0px 4px; */
+    padding: 4px 0px 0px 0px;
+    font-family: 'Courier New', monospace;
+}
+
+.in-call-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    /* padding-bottom: 6px; */
+    /* border-bottom: 1px solid #1a3a1a; */
+    flex-shrink: 0;
+    filter: grayscale(100%);
+    font-family: sans-serif;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#inCallProfileEmoji {
+    font-size: 16px;
+}
+
+.in-call-status {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 4px;
+    font-size: 10px;
+    font-weight: bold;
+    font-family: sans-serif;
+    flex-shrink: 0;
+    /* border-bottom: 1px dashed rgba(26, 58, 26, 0.5); */
+    border-bottom: 1px solid #1a3a1a;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.35);
+
+}
+
+.in-call-transcript {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0px 4px;
+    line-height: 1.2;
+    font-size: 12px;
+    filter: grayscale(100%);
+    overflow-wrap: anywhere;
+    /* ✅ Tördelés hozzáadása */
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.in-call-transcript::-webkit-scrollbar {
+    width: 4px;
+}
+
+.in-call-transcript::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.4);
+    border-radius: 2px;
+}
+
+.transcript-user, .transcript-ai {
+    margin-bottom: 6px;
+    opacity: 0.9;
+    /* ✅ Tördelés hozzáadása */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;  /* Sortörések megtartása */
+    text-shadow: 0.8px 0.45px grey;
+    font-family: sans-serif;
+}
+
+.transcript-user {
+    /* font-weight: bold; */
+    overflow-x: hidden;
+}
+
+.transcript-ai {
+    padding-left: 8px;
+    overflow-x: hidden;
+    font-weight: bold;
+}
+
+/* ✅ Link stílus az in-call transcript-ben */
+.in-call-transcript .retro-link {
+    color: #1a3a1a;
+    text-decoration: underline;
+    word-break: break-all;  /* Hosszú linkek törése */
+    cursor: pointer;
+}
+
+/* Phone Remove Confirmation */
+.phone-remove-confirmation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%;
+    background: #9db891; /* Nokia zöld */
+    border: 1px solid #1a3a1a;
+    padding: 12px;
+    z-index: 250; /* Még magasabb, mint a details menu */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.phone-remove-confirmation .confirm-title {
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a3a1a;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #4a5a38;
+}
+
+.phone-remove-confirmation .confirm-message {
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 11px;
+    color: #2a3a18;
+    margin-bottom: 12px;
+    padding: 4px;
+}
+
+.phone-remove-confirmation .confirm-options {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.phone-remove-confirmation .confirm-option {
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 16px;
+/*     background: #a3bd97;
+    color: #1a3a1a;
+    border: 2px solid #8fa578;
+    border-radius: 4px; */
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.phone-remove-confirmation .confirm-option.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    color: #b8c5a4;
+    transform: scale(1.05);
+}
+
+.phone-remove-confirmation .confirm-hint {
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #4a5a38;
+    padding-top: 6px;
+    border-top: 1px solid #4a5a38;
+}
+
+/* Phone Details Menu */
+.phone-details-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    background: #9db891; /* Nokia zöld */
+    border: 1px solid #1a3a1a;
+    /* border-radius: 4px; */
+    padding: 10px;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.phone-details-menu .menu-title {
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a3a1a;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #4a5a38;
+}
+
+.phone-details-menu .menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.phone-details-menu .menu-item {
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 6px 8px;
+    background: #a3bd9700;
+    color: #1a3a1a;
+    cursor: pointer;
+    transition: all 0.1s;
+    /* filter: grayscale(100%); */ /* Emoji-khoz */
+}
+
+.phone-details-menu .menu-item.selected {
+    background: #1a3a1a; /* Sötét zöld kijelölés */
+    border-color: #1a3a1a;
+    border-radius: 4px;
+    color: #b8c5a4; /* Világos szöveg */
+    /* font-weight: 600; */
+    font-size: 12px;
+}
+
+.phone-details-menu .menu-hint {
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #4a5a38;
+    padding-top: 6px;
+    border-top: 1px solid #4a5a38;
+}
+
+/* A státuszbárban lévő hívás ikon stílusa */
+.call-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: callBlink 1.5s infinite;
+}
+
+.call-status.hidden {
+    display: none !important;
+}
+
+/* ===========================
+   Dialog Stacking Fix
+   =========================== */
+
+/* Biztosítja, hogy a System Info és About dialógusok
+   mindig a többi menü (pl. Settings) fölött jelenjenek meg. */
+#systemInfoDialog,
+#aboutDialog {
+    z-index: 110;
+}
+
+/* --- ÚJ: Gombnyomás animáció javítása JavaScript-vezérelt osztállyal --- */
+
+/* Az :active állapotot felváltjuk egy JS által vezérelt osztállyal,
+   ami megbízhatóbban működik a preventDefault() mellett is. */
+.key.active-key,
+.nav-key.active-key,
+.call-button.active-key,
+.dpad button.active-key {
+    transform: translateY(2px);
+    box-shadow: 
+        0 1px 3px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+/* Külön szabály a D-pad középső gombjára és a hívásgombokra a kisebb elmozdulásért */
+.dpad-center.active-key,
+.call-button.active-key {
+    transform: scale(0.95);
+}
+
+/* Külön szabály a Menu és C gombokra */
+.nav-key.active-key {
+    transform: translateY(1px);
+}
+
+.in-call-status {
+    align-items: center; /* Vertikális középre igazítás */
+}
+
+/* ÚJ: Wrapper a jobb oldali elemeknek (időzítő és költség) */
+.in-call-timers {
+    display: flex;
+    flex-direction: column; /* Egymás alá rendezi őket */
+    align-items: flex-end; /* Jobbra igazítja a tartalmat */
+    gap: 2px; /* Egy kis térköz közöttük */
+}
+
+#inCallCost {
+    font-size: 9px;
+    opacity: 0.8;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+/* ===========================
+   PHONE APP STYLES
+   =========================== */
+
+.phone-app-container {
+    position: absolute;
+    top: 21px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background: #9db891; */
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.phone-app-container.hidden {
+    display: none;
+}
+
+.phone-app-header {
+    display: flex;
+    height: 24px;
+    background: #8fa578;
+    /* border-bottom: 2px solid #4a5a38; */
+}
+
+.phone-app-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2a3a18;    
+    border-right: 1px solid #4a5a38;
+    position: relative;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+}
+
+.phone-app-tab:last-child {
+    border-right: none;
+}
+
+.phone-app-tab.active {
+    background: #9db891;
+    color: #1a3a1a;
+}
+
+.phone-app-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* height: 0.5px; */
+    background: #337133;
+}
+
+.tab-icon {
+    font-size: 12px;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.tab-label {
+    white-space: nowrap;
+}
+
+.phone-app-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+    /* overflow: hidden; */
+}
+
+.phone-app-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.phone-app-content::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.phone-app-hint {
+    height: 16px;
+    background: #8fa578;
+    border-top: 1px solid #4a5a38;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #2a3a18;
+}
+
+/* Empty State */
+.phone-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 32px;
+    opacity: 0.5;
+    opacity: 75%;
+}
+
+.empty-text {
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2a3a18;
+}
+
+.empty-hint {
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #4a5a38;
+}
+
+/* Call History List */
+.phone-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.phone-history-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* padding: 8px; */
+    /* background: #a4bd99; */
+    background: rgba(26, 58, 26, 0.05);
+    /* border: 2px solid #8fa578; */
+    border-radius: 4px;    
+    transition: all 0.1s;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.phone-history-item.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.history-emoji {
+    font-size: 18px;
+    width: 32px;
+    /* height: 32px; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.history-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-name {
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a3a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.phone-history-item.selected .history-name {
+    color: #b8c5a4;
+}
+
+.history-meta {
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #4a5a38;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.phone-history-item.selected .history-meta {
+    color: #8fa578;
+}
+
+/* Contacts List */
+.phone-contacts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.phone-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* padding: 8px; */
+    background: rgba(26, 58, 26, 0.05);
+    /* border: 2px solid #8fa578; */
+    border-radius: 4px;    
+    transition: all 0.1s;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.phone-contact-item.selected {
+    background: #1a3a1a;
+    border-color: #1a3a1a;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.contact-emoji {
+    font-size: 18px;
+    width: 32px;
+    /* height: 32px; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.contact-name {
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a3a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.phone-contact-item.selected .contact-name {
+    color: #b8c5a4;
+}
+
+/* Call Details Dialog */
+.phone-call-details {
+    position: absolute;
+    top: 19px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #9db891;
+    display: flex;
+    flex-direction: column;
+    z-index: 150;
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #8fa578;
+    /* border-bottom: 1px solid #4a5a38; */
+    padding: 0px 8px;
+    min-height: 27px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    box-shadow: 0px 2px 2px rgb(0 0 0 / 20%);
+}
+
+.details-left {
+    display: flex;
+    align-items: center;
+    /* gap: 6px; */
+    flex: 1;
+}
+
+.details-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.details-emoji {
+    font-size: 18px;
+    width: 40px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.details-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.details-name {
+    font-family: sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a3a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 75%;
+}
+
+.details-duration {
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #2a3a18;
+    font-weight: 600;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.details-date {
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #2a3a18;
+    font-weight: 600;
+    text-align: right;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.details-cost {
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #1a3a1a;
+    font-weight: 700;
+    text-align: right;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.details-transcript {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 12px 0px 12px;
+    font-family: sans-serif;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.details-transcript::-webkit-scrollbar {
+    width: 4px;
+}
+
+.details-transcript::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.details-transcript .transcript-user {
+    color: #1a3a1a;
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    /* background: #889378; */
+    border-radius: 4px;
+    word-wrap: break-word;
+    filter:grayscale(1);
+    border: 1px solid #606c5b;
+}
+
+.details-transcript .transcript-ai {
+    color: #2a3a18;
+    margin-bottom: 4px;
+    /* background: #9ca989; */
+    border-radius: 4px;
+    padding: 6px 8px;
+    word-wrap: break-word;
+    filter:grayscale(1);
+    border: 1px solid #7e9974;
+}
+
+.transcript-empty {
+    text-align: center;
+    color: #4a5a38;
+    font-style: italic;
+    margin-top: 40px;
+}
+
+.details-hint {
+    height: 16px;
+    background: #8fa578;
+    border-top: 1px solid #4a5a38;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    font-size: 9px;
+    color: #2a3a18;
+}
+
+.retro-link {
+    color: #1a3a1a;
+    text-decoration: underline;
+    word-break: break-all;  /* Hosszú linkek törése */
+    cursor: pointer;
+}

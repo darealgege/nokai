@@ -1,0 +1,455 @@
+/* ===========================
+   Nokia Messages App Styles
+   =========================== */
+
+/* Messages Container */
+.messages-container {
+    width: 100%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    /* background: #9db891; */
+}
+
+.messages-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0px 0px 0px 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.messages-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messages-content::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.messages-hint {
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.7;
+    padding: 6px 8px 4px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    font-weight: bold;
+    flex-shrink: 0;
+    background: rgba(26, 58, 26, 0.05);
+}
+
+/* Empty State */
+.messages-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    filter: grayscale(100%);
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    opacity: 0.6;
+    filter: grayscale(100%);
+}
+
+.empty-text {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.empty-hint {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Threads List */
+.threads-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%; /* ✅ ÚJ: Kitölti a rendelkezésre álló helyet */
+    overflow-y: auto; /* ✅ ÚJ: Engedélyezi a görgetést */
+    width: 100%;
+    padding-top: 8px;
+;
+}
+
+/* ✅ ÚJ: Scrollbar stílus a thread listához */
+.threads-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.threads-list::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.thread-item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: rgba(26, 58, 26, 0.05);
+    cursor: default;
+    transition: background 0.2s;    
+    flex-shrink: 0; /* Megakadályozza, hogy az elemek összenyomódjanak */
+    max-width: 98%;
+}
+
+.thread-item.selected {
+    background: #1a3a1a;
+    color: #9db891;
+    font-weight: bold;
+}
+
+.thread-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+
+.thread-emoji {
+    font-size: 18px;
+    flex-shrink: 0;
+    filter: grayscale(1);
+    opacity: 75%;
+}
+
+.thread-name {
+    font-size: 13px;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.thread-preview {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-left: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: sans-serif;
+}
+
+.thread-item.selected .thread-preview {
+    opacity: 0.9;
+}
+
+/* Conversation View */
+.conversation-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;    
+    background: rgba(26, 58, 26, 0.15);
+    padding: 2px 0px 2px 2px;
+    /* border-bottom: 1px solid rgba(26, 58, 26, 0.3); */
+    margin: 0px 0px 0px -4px;
+    filter: grayscale(100%);
+    box-shadow: 0px 2px 2px rgb(0 0 0 / 20%);
+}
+
+.conv-emoji {
+    font-size: 14px;
+    margin-left: 8px;
+    opacity: 75%;
+}
+
+.conv-name {
+    font-size: 13px;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.conversation-messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 4px;
+}
+
+.conversation-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.conversation-messages::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+.msg-timestamp {
+    font-size: 9px;
+    opacity: 0.6;
+    margin-top: 4px;
+    font-family: sans-serif; /* Jobban olvasható kis méretben */
+}
+
+/* Message Bubbles */
+.message-bubble {
+    margin-bottom: 6px;
+    padding: 3px 5px 5px 5px;
+    border-radius: 4px;
+    line-height: 1.3;
+    word-wrap: break-word;
+    white-space: normal;
+    filter: grayscale(100%);
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0px 2px 2px rgb(0 0 0 / 20%);
+}
+
+.msg-user {
+    background: rgba(26, 58, 26, 0.15);
+    margin-left: auto;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    margin-right: 6px;
+    text-align: right;
+    font-weight: 500;
+    align-items: flex-end;
+}
+
+.msg-ai {
+    background: rgba(26, 58, 26, 0.08);
+    margin-left: 6px;
+    margin-right: auto;
+    align-items: flex-start;
+}
+
+.msg-text {
+    font-size: 15px;
+    /* ✅ Tördelés hozzáadása */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;  /* Sortörések megtartása */
+    text-shadow: 0.8px 0.45px grey;
+    font-family: sans-serif;
+}
+
+/* ✅ Link stílus a Messages appban */
+.msg-text .retro-link {
+    color: #1a3a1a;
+    text-decoration: underline;
+    word-break: break-all;  /* Hosszú linkek törése */
+    cursor: pointer;
+}
+
+/* Typing Indicator */
+.typing-indicator .msg-text {
+    animation: typingDots 1.4s infinite;
+}
+
+@keyframes typingDots {
+    0%, 60%, 100% { opacity: 0.4; }
+    30% { opacity: 1; }
+}
+
+/* Conversation Input */
+.conversation-input {
+    display: flex;
+    align-items: flex-start;
+    padding: 2px 12px 0px 6px;
+    border-top: 1px solid rgba(26, 58, 26, 0.3);
+    background: rgba(26, 58, 26, 0.05);
+    margin: 0px -8px 2px -8px;
+    min-height: 28px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.input-prompt {
+    margin-right: 2px;
+    flex-shrink: 0;
+    font-weight: bold;    
+    text-shadow: 1px 1px 1px grey;
+}
+
+.messages-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+}
+
+.messages-input-area {
+    flex: 1;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(26, 58, 26, 0.3);
+    outline: none;
+    resize: none;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-family: sans-serif;
+    color: #1a3a1a;
+    line-height: 1.2;
+    padding: 2px 4px;
+    overflow-y: auto;
+    filter: grayscale(100%);
+    min-height: 25px;
+    max-height: 95px;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    caret-color: transparent;
+    text-shadow: 0px 1px 2px grey;
+}
+
+.messages-cursor {
+    position: absolute;
+    width: 1px;
+    height: 17px;
+    background: #1a3a1a;
+    left: 4px; 
+    top: 4px;
+    animation: blink-cursor 1s step-end infinite;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+@keyframes blink-cursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.messages-input-area::-webkit-scrollbar {
+    width: 3px;
+}
+
+.messages-input-area::-webkit-scrollbar-thumb {
+    background: rgba(26, 58, 26, 0.3);
+    border-radius: 2px;
+}
+
+/* Messages Settings Dialog */
+.messages-settings-dialog {
+    z-index: 110;
+}
+
+.messages-new-dialog {
+    z-index: 110;
+    max-height: 90%;
+}
+
+/* ✅ ÚJ: Messages Image Attach Dialog - Grid Layout */
+.messages-image-attach-dialog {
+    z-index: 110;
+}
+
+.messages-image-attach-dialog .image-attach-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.messages-image-attach-dialog .image-attach-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.messages-image-attach-dialog .image-attach-item.selected {
+    background: #1a3a1a;
+    color: #9db891;
+    border-color: #9db891;
+}
+
+.messages-image-attach-dialog .image-attach-thumb {
+    width: 100%;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 2px;
+    filter: grayscale(100%);
+    flex-basis: fit-content;
+}
+
+.messages-image-attach-dialog .image-attach-item span {
+    font-size: 9px;
+    margin-top: 2px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+/* ✅ ÚJ: Kép indikátor */
+.messages-image-indicator {
+    font-size: 14px;
+    margin-right: 2px;
+    flex-shrink: 0;
+    filter: grayscale(100%);
+}
+
+.input-text .cursor {
+    display: inline;
+    color: #1a3a1a;
+    background: transparent;
+    animation: blink 1s step-end infinite;
+    font-family: 'Courier New', monospace;
+    filter: grayscale(100%);
+}
+
+.messages-new-dialog .dialog-list {
+    max-height: 120px;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+.input-text {
+    flex: 1;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    filter: grayscale(100%);
+    opacity: 0.8;
+    font-family: 'Courier New', monospace;
+    line-height: 1.2;
+}
+
+/* T9 Suggestions */
+.messages-t9-suggestions {
+    padding: 4px 8px;
+    border-top: 1px solid rgba(26, 58, 26, 0.2);
+    background: rgba(26, 58, 26, 0.05);
+    min-height: 20px;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    filter: grayscale(100%);
+}
+
+.t9-suggestions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.t9-word {
+    padding: 2px 4px;
+    border-radius: 2px;
+    background: rgba(26, 58, 26, 0.1);
+}
+
+.t9-word.selected {
+    background: #1a3a1a;
+    color: #9db891;
+    font-weight: bold;
+}
