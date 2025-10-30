@@ -115,21 +115,96 @@ Follow these steps to set up and run the project locally.
 ## 📁 Project Structure
 
 ```
-.
-├── profiles/             # AI personality .ini files
-├── brave-search.php      # Backend proxy for Brave Search
-├── fetch-url.php         # Backend proxy for fetching URL content
-├── list_profiles.php     # Backend script to list profiles
-├── openaiProxy.php       # Backend proxy for OpenAI Chat API
+├── apps/ # Logic for individual applications
+│ ├── camera/ # Camera application
+│ │ └── nokia_camera.js
+│ ├── gallery/ # Gallery application
+│ │ └── nokia_gallery.js
+│ ├── messages/ # Messaging application and handlers
+│ │ ├── nokia_messages.js
+│ │ ├── nokia_messages_api.js
+│ │ ├── nokia_messages_background_handler.js
+│ │ ├── nokia_messages_image_handler.js
+│ │ └── nokia_messages_storage.js
+│ └── phone/ # Phone application
+│ └── nokia_phone_app.js
+├── games/ # Games
+│ ├── doom/ # DOOM easter egg
+│ │ ├── doom_easter_egg.css
+│ │ ├── doom_easter_egg.js
+│ │ └── doom_icon.png
+│ ├── snake/ # Snake game
+│ │ ├── snake_game.css
+│ │ └── snake_game.js
+│ └── super_steve/ # Super Steve platformer game
+│ ├── super_steve_audio.js
+│ ├── super_steve_game.css
+│ ├── super_steve_game.js
+│ ├── super_steve_icon.png
+│ ├── super_steve_jump.png
+│ ├── super_steve_level.js
+│ ├── super_steve_metro_system_integration.js
+│ ├── super_steve_player.js
+│ ├── super_steve_renderer.js
+│ ├── super_steve_sprites.js
+│ ├── super_steve_stand_anim.png
+│ ├── super_steve_underground_scene_generator.js
+│ ├── super_steve_walk.png
+│ ├── super_steve_walk_2x1.png
+│ ├── super_steve_walk_new_1.png
+│ ├── super_steve_walk_new_2.png
+│ ├── super_steve_walk_new_3.png
+│ └── super_steve_walk_new_4.png
+├── handlers/ # General application handlers (keyboard, navigation)
+│ ├── nokia_app_handlers.js
+│ ├── nokia_app_handlers_init.js
+│ ├── nokia_app_handlers_keyboard.js
+│ ├── nokia_app_handlers_navigation.js
+│ └── nokia_app_handlers_utils.js
+├── image_handlers/ # Modules related to image processing, including AI integration
+│ ├── nokia_chatgpt_image_handler.js
+│ ├── nokia_dcim_manager.js
+│ ├── nokia_image_attachments.js
+│ ├── nokia_storage_cleanup.js
+│ └── nokia_vision_handler.js
+├── lib/ # General-purpose libraries and utilities
+│ ├── nokia_api_key_manager.js
+│ ├── nokia_app.js
+│ ├── nokia_battery_handler.js
+│ ├── nokia_cost_calculator.js
+│ ├── nokia_decision_agent.js
+│ ├── nokia_emoji_converter.js
+│ ├── nokia_profile_manager.js
+│ ├── nokia_search_handler.js
+│ ├── nokia_unified_history_manager.js
+│ ├── nokia_voice_handler.js
+│ └── openai_pricing.json
+├── main/ # Main application components (startup, login)
+│ ├── nokia_app_manager.js
+│ ├── nokia_pin_screen.js
+│ └── nokia_setup_screen.js
+├── migration/ # Database and image migration scripts
+│ ├── nokia_image_indexeddb.js
+│ └── nokia_image_migration.js
+├── profiles/ # AI personality .ini files
+├── styles/ # CSS stylesheets
+│ ├── nokia_camera_gallery.css
+│ ├── nokia_messages.css
+│ ├── nokia_setup.css
+│ └── nokia_style.css
+├── T9/ # T9 dictionaries
+│ ├── words_en.txt
+│ └── words_hu.txt
+├── brave-search.php # Backend proxy for Brave Search
+├── favicon.ico # Favicon
+├── fetch-url.php # Backend proxy for fetching URL content
+├── index.html # Main HTML file
+├── list_profiles.php # Backend script to list profiles
+├── openaiProxy.php # Backend proxy for OpenAI Chat API
 ├── perplexity-search.php # Backend proxy for Perplexity AI
-├── realtime-session.php  # Backend for OpenAI Realtime API sessions
-├── weather.php           # Backend for weather data
-├── nokia_app.js          # Main application logic and state
-├── nokia_app_*.js        # Handler modules (navigation, keyboard, etc.)
-├── nokia_*.js            # Individual app/module logic (Camera, Gallery, etc.)
-├── *.css                 # Stylesheets for the UI
-├── index.html            # Main HTML file
-└── README.md             # This file
+├── realtime-session.php # Backend for OpenAI Realtime API sessions
+├── weather.php # Backend for weather data
+└── README.md # This file
 ```
 
 ## 💡 Future Ideas
@@ -144,6 +219,7 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 
 ---
+
 
 
 
