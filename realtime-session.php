@@ -36,7 +36,7 @@ if (time() - $rate_data['start_time'] > $time_window) {
 }
 
 // Rate limit ellenőrzés
-if ($rate_data['count'] >= $max_requests) {
+/* if ($rate_data['count'] >= $max_requests) {
     http_response_code(429);
     echo json_encode([
         'error' => [
@@ -45,7 +45,7 @@ if ($rate_data['count'] >= $max_requests) {
         ]
     ]);
     exit;
-}
+} */
 
 // Növeljük a számlálót
 $_SESSION[$rate_limit_key]['count']++;

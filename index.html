@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Nokai 3110 ChatGPT with T9 & Search</title>
+    <title>Nokai 3110</title>
     <link rel="stylesheet" href="./styles/nokia_style.css">
     <link rel="stylesheet" href="./styles/nokia_camera_gallery.css">
     <link rel="stylesheet" href="./styles/nokia_messages.css"> 
     <link rel="stylesheet" href="./games/doom/doom_easter_egg.css">
     <link rel="stylesheet" href="./games/snake/snake_game.css">
     <link rel="stylesheet" href="./games/super_steve/super_steve_game.css">
+    <link rel="stylesheet" href="./games/fs4/fs4_game.css">
+    <link rel="stylesheet" href="./games/frontier/frontier_game.css">
     <link rel="stylesheet" href="./styles/nokia_setup.css">
 </head>
 <body>
@@ -391,6 +393,9 @@
     <script src="./apps/messages/nokia_messages_background_handler.js"></script>
     <script src="./apps/messages/nokia_messages.js"></script>    
     <script src="./games/doom/doom_easter_egg.js"></script>
+    
+    <!-- ✅ Snake Game Modules -->
+    <script src="./games/snake/snake_audio.js"></script>
     <script src="./games/snake/snake_game.js"></script>
     
     <!-- ✅ Super Steve Game Modules (load in order!) -->
@@ -402,6 +407,12 @@
     <script src="./games/super_steve/super_steve_metro_system_integration.js"></script>    
     <script src="./games/super_steve/super_steve_audio.js"></script>
     <script src="./games/super_steve/super_steve_game.js"></script>
+    
+    <!-- ✅ Flight Simulator 4.0 Game -->
+    <script src="./games/fs4/fs4_game.js"></script>
+    
+    <!-- ✅ Frontier: Elite II Game -->
+    <script src="./games/frontier/frontier_game.js"></script>
 
     <!-- 4. Eseménykezelő ("handle...") függvények - EZEKNEK KELL A VÉGÉN LENNIE! -->
     <script src="./handlers/nokia_app_handlers_utils.js"></script>
