@@ -43,10 +43,25 @@ function resetScreen(message = 'Session cleared!') {
     screenContent.appendChild(inputLine);
     currentInput = '';
     cursorPosition = 0;
-    /* window.conversationHistory = []; */
-    if (window.conversationHistories) {
-        window.conversationHistories['main'] = [];
-    }    
+    
+    // ✅ JAVÍTÁS: CSAK a ChatGPT text üzeneteket töröljük!
+    // SMS és voice call előzmények MEGMARADNAK!
+    if (window.unifiedHistoryManager) {
+        // Ha van aktuális context ID, csak a ChatGPT üzeneteket töröljük
+        const contextId = window.currentChatContextId || 'main';
+        console.log('🗑️ Clearing ChatGPT messages from context:', contextId);
+        window.unifiedHistoryManager.clearChatGPTMessages(contextId);
+    } else if (window.conversationHistories) {
+        // Fallback: Ha nincs unified manager, a régi módon töröljük
+        const contextId = window.currentChatContextId || 'main';
+        if (window.conversationHistories[contextId]) {
+            window.conversationHistories[contextId] = window.conversationHistories[contextId].filter(msg => {
+                const isChatGPTText = (msg.type === 'text' && msg.metadata && msg.metadata.app === 'chatgpt');
+                return !isChatGPTText;
+            });
+        }
+    }
+    
     t9Sequence = '';
     t9Suggestions = [];
     saveToStorage();
@@ -933,6 +948,105 @@ function scrollSystemInfoDialog(amount) {
         
         content.scrollTop = newScroll;
         //playDTMF(amount > 0 ? '8' : '2');
+    }
+}
+
+// ✅ ÚJ: Change PIN Code funkció
+async function handleChangePinCode() {
+    try {
+        // 1. Ellenőrizzük, van-e tárolt kulcs
+        const hasKey = await window.apiKeyManager.hasStoredKey();
+        if (!hasKey) {
+            await showAlert('No stored API key found.<br>Please set up your API key first.', 'Info');
+            return;
+        }
+
+        // 2. Bezárjuk az összes dialógust és elrejtjük a képernyőket
+        if (window.appManager) {
+            window.appManager.closeCurrentDialog(true);
+            window.appManager.hideAllScreens();
+        }
+
+        // 3. Jelenlegi PIN bekérése
+        let currentPin;
+        try {
+            currentPin = await window.pinScreen.show('Enter Current PIN');
+        } catch (error) {
+            // Felhasználó megszakította
+            if (window.appManager) window.appManager.showHomeScreen();
+            return;
+        }
+
+        if (!currentPin) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('PIN entry cancelled.', 'Aborted');
+            return;
+        }
+
+        // 4. Ellenőrizzük a jelenlegi PIN-t
+        const apiKey = await window.apiKeyManager.loadAndDecryptKey(currentPin);
+        if (!apiKey) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('Incorrect current PIN.', 'Error');
+            return;
+        }
+
+        // 5. Új PIN bekérése
+        let newPin;
+        try {
+            newPin = await window.pinScreen.show('Enter New PIN (4-6 digits)');
+        } catch (error) {
+            // Felhasználó megszakította
+            if (window.appManager) window.appManager.showHomeScreen();
+            return;
+        }
+
+        if (!newPin) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('PIN entry cancelled.', 'Aborted');
+            return;
+        }
+
+        // 6. Új PIN validálása
+        if (newPin.length < 4 || newPin.length > 6) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('New PIN must be 4-6 digits.', 'Error');
+            return;
+        }
+
+        // 7. Új PIN megerősítése
+        let confirmPin;
+        try {
+            confirmPin = await window.pinScreen.show('Confirm New PIN');
+        } catch (error) {
+            // Felhasználó megszakította
+            if (window.appManager) window.appManager.showHomeScreen();
+            return;
+        }
+
+        if (!confirmPin) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('PIN entry cancelled.', 'Aborted');
+            return;
+        }
+
+        if (newPin !== confirmPin) {
+            if (window.appManager) window.appManager.showHomeScreen();
+            await showAlert('PINs do not match.<br>Please try again.', 'Error');
+            return;
+        }
+
+        // 8. PIN megváltoztatása
+        await window.apiKeyManager.changePinCode(currentPin, newPin);
+
+        // 9. Sikeres visszajelzés
+        if (window.appManager) window.appManager.showHomeScreen();
+        await showAlert('PIN code successfully changed!', 'Success');
+
+    } catch (error) {
+        console.error('❌ Error changing PIN code:', error);
+        if (window.appManager) window.appManager.showHomeScreen();
+        await showAlert('Error: ' + error.message, 'Error');
     }
 }
 

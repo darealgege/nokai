@@ -13,6 +13,9 @@ class SnakeGame {
         this.paused = false;
         this.gameOver = false;
         
+        // Audio system
+        this.audio = null;
+        
         // Grid settings
         this.gridSize = 8;
         this.tileCountX = 0;
@@ -29,7 +32,7 @@ class SnakeGame {
         
         // Pause menu
         this.pauseMenuIndex = 0;
-        this.pauseMenuItems = ['Resume Game', 'View Scores', 'Quit Game'];
+        this.pauseMenuItems = ['Resume Game', 'Music: On', 'View Scores', 'Quit Game'];
         
         // Game Over menu
         this.gameOverMenuIndex = 0;
@@ -54,9 +57,18 @@ class SnakeGame {
         this.gameOver = false;
         this.paused = false;
         
+        // Initialize audio
+        if (!this.audio) {
+            this.audio = new SnakeAudio();
+        }
+        this.audio.init();
+        
         this.createUI();
         this.setupControls();
         this.initGame();
+        
+        // Start background music
+        this.audio.startBackgroundMusic();
         
         this.gameLoopInterval = setInterval(() => this.gameLoop(), this.speed);
     }
@@ -67,6 +79,11 @@ class SnakeGame {
         console.log('🐍 Snake Game Deactivated!');
         this.active = false;
         this.paused = false;
+        
+        // Stop audio
+        if (this.audio) {
+            this.audio.stopBackgroundMusic();
+        }
         
         if (this.gameLoopInterval) {
             clearInterval(this.gameLoopInterval);
@@ -225,6 +242,10 @@ class SnakeGame {
                         // Resume
                         this.togglePause();
                     } else if (this.pauseMenuIndex === 1) {
+                        // Toggle Music
+                        this.toggleMusic();
+                        this.draw();
+                    } else if (this.pauseMenuIndex === 2) {
                         // View Scores
                         this.viewingScores = true;
                         this.draw();
@@ -303,6 +324,11 @@ class SnakeGame {
         this.viewingScores = false;
         this.initGame();
         
+        // Restart background music
+        if (this.audio && !this.audio.isMusicMuted()) {
+            this.audio.startBackgroundMusic();
+        }
+        
         // Új interval indítása
         this.gameLoopInterval = setInterval(() => this.gameLoop(), this.speed);
         console.log('🐍 New game started');
@@ -374,10 +400,18 @@ class SnakeGame {
         if (head.x === this.food.x && head.y === this.food.y) {
             this.score++;
             this.placeFood();
+            // Play food collection sound
+            if (this.audio) {
+                this.audio.playFood();
+            }
             // Don't remove tail (snake grows)
         } else {
             // Remove tail (snake moves)
             this.snake.pop();
+            // Play subtle movement sound
+            if (this.audio) {
+                this.audio.playMove();
+            }
         }
         
         this.draw();
@@ -442,8 +476,27 @@ class SnakeGame {
         //playDTMF('5');
         this.paused = !this.paused;
         this.pauseMenuIndex = 0;
+        
+        // Update music menu item text
+        this.updateMusicMenuItem();
+        
         this.draw();
         console.log(`🐍 Game ${this.paused ? 'paused' : 'resumed'}`);
+    }
+    
+    toggleMusic() {
+        if (!this.audio) return;
+        
+        this.audio.toggleMusicMute();
+        this.updateMusicMenuItem();
+        console.log('🎵 Music toggled');
+    }
+    
+    updateMusicMenuItem() {
+        if (!this.audio) return;
+        
+        const musicState = this.audio.isMusicMuted() ? 'Off' : 'On';
+        this.pauseMenuItems[1] = `Music: ${musicState}`;
     }
     
     drawPauseMenu() {
@@ -483,6 +536,11 @@ class SnakeGame {
     handleGameOver() {
         this.gameOver = true;
         this.gameOverMenuIndex = 0; // ✅ Reset menu index
+        
+        // Play game over sound
+        if (this.audio) {
+            this.audio.playGameOver();
+        }
         
         // ✅ Mentés a score-nak
         this.saveScore(this.score);

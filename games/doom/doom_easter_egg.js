@@ -931,7 +931,9 @@ async initDoom() {
     this.dosInstance = dos;
 
     this.showMessage('Extracting DOOM...', 'Almost there...');
-    await this.dosInstance.fs.extract("https://js-dos.com/cdn/upload/DOOM-@evilution.zip");
+    //await this.dosInstance.fs.extract("https://js-dos.com/cdn/upload/DOOM-@evilution.zip");
+    // Load local Frontier zip file - frontier.exe is directly in root
+    await this.dosInstance.fs.extract("./games/doom/DOOM-@evilution.zip");    
 
     // ✅ PONTOSAN AZ ELŐBBI MŰKÖDŐ MÓDSZER!
     this.showMessage('Initializing...', 'Please wait...');

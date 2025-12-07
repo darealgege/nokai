@@ -23,7 +23,7 @@ setInterval(async () => {
             console.warn('⚠️ Weather auto-refresh failed:', error);
         }
     }
-}, 60000); // 60 seconds
+}, 1 * 60000); // 60 seconds
 
 // Initialize search handler and decision agent
 /* let searchHandler = null;
@@ -1025,14 +1025,20 @@ function initializeButtonListeners() {
             element.removeEventListener('touchstart', element._safeHandlers.down);
             element.removeEventListener('mouseup', element._safeHandlers.up);
             element.removeEventListener('touchend', element._safeHandlers.up);
+            if (element._safeHandlers.unlock) {
+                element.removeEventListener('mousedown', element._safeHandlers.unlock, { capture: true });
+                element.removeEventListener('touchstart', element._safeHandlers.unlock, { capture: true });
+            }
         }
         
-        const handlePressDown = (e) => {
+        const handlePressDown = async (e) => {
             // Ha ez egy click esemény, és nemrég volt egy touch, akkor ignoráljuk
             if (e.type === 'mousedown' && touchEventProcessed) return;
 
             e.preventDefault();
-            playDTMF(dtmfKey);
+            
+            // Most már játszhatjuk a hangot (az AudioContext már feloldva a capture phase-ben)
+            await playDTMF(dtmfKey);
             element.classList.add('active-key');
         };
 
@@ -1067,8 +1073,18 @@ function initializeButtonListeners() {
         element.addEventListener('touchstart', handlePressDown, { passive: false });
         element.addEventListener('mouseup', handlePressUp);
         element.addEventListener('touchend', handlePressUp, { passive: false });
+        
+        // ✅ KRITIKUS: SZINKRON AudioContext feloldás CAPTURE PHASE-ben!
+        const unlockAudio = (e) => {
+            if (window.audioContext && window.audioContext.state === 'suspended') {
+                window.audioContext.resume();
+                console.log('🔊 AudioContext unlocked in capture phase');
+            }
+        };
+        element.addEventListener('mousedown', unlockAudio, { capture: true });
+        element.addEventListener('touchstart', unlockAudio, { capture: true, passive: true });
 
-        element._safeHandlers = { down: handlePressDown, up: handlePressUp };
+        element._safeHandlers = { down: handlePressDown, up: handlePressUp, unlock: unlockAudio };
     };
 
     // --- Normál gombok regisztrálása ---
@@ -1107,9 +1123,19 @@ function initializeButtonListeners() {
     window.conversationHistories = { main: [] };    
 
     if (clearBtn) {
-        const startPress = (e) => {
+        // ✅ SZINKRON AudioContext feloldás CAPTURE PHASE-ben!
+        const unlockAudioClear = (e) => {
+            if (window.audioContext && window.audioContext.state === 'suspended') {
+                window.audioContext.resume();
+                console.log('🔊 AudioContext unlocked (Clear button, capture)');
+            }
+        };
+        clearBtn.addEventListener('mousedown', unlockAudioClear, { capture: true });
+        clearBtn.addEventListener('touchstart', unlockAudioClear, { capture: true, passive: true });
+        
+        const startPress = async (e) => {
             e.preventDefault();
-            longPressTriggered = false; 
+            longPressTriggered = false;
             
             clearPressTimer = setTimeout(() => {
                 longPressTriggered = true;
@@ -1117,10 +1143,11 @@ function initializeButtonListeners() {
             }, 1500);
         };
 
-        const endPress = (e) => {
-            playDTMF('1');
+        const endPress = async (e) => {
             e.preventDefault();
             clearTimeout(clearPressTimer);
+            
+            await playDTMF('1');
 
             if (!longPressTriggered) {
                 handleClear(); // Rövid lenyomásra ezt hívjuk

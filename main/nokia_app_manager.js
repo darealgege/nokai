@@ -21,9 +21,11 @@ class NokiaAppManager {
             { id: 'input', icon: '⌨️', name: 'Input Settings' }
         ];
         this.games = [
-            { id: 'doom', icon: './games/doom/doom_icon.png', name: 'DOOM' },
             { id: 'super_steve', icon: './games/super_steve/super_steve_icon.png', name: 'Super Steve' },
-            { id: 'snake', icon: '🐍', name: 'Snake' }
+            { id: 'snake', icon: '🐍', name: 'Snake' },
+            { id: 'doom', icon: './games/doom/doom_icon.png', name: 'DOOM' },
+            { id: 'fs4', icon: './games/fs4/fs4_icon.png', name: 'Flight Sim 4.0' },
+            { id: 'frontier', icon: './games/frontier/elite_icon.png', name: 'Frontier Elite II' }            
         ];
         this.dialogStack = [];
     }
@@ -282,7 +284,7 @@ class NokiaAppManager {
         }
     }
 
-    launchChatGPTApp() {
+    async launchChatGPTApp() {
         const homeScreen = document.getElementById('homeScreen');
         const screenContent = document.getElementById('screenContent');
         
@@ -290,6 +292,30 @@ class NokiaAppManager {
         if (screenContent) {
             screenContent.classList.remove('hidden');
             screenContent.style.display = 'block';
+            
+            // ✅ FIX: Set correct context based on selected profile BEFORE loading history!
+            const selectedProfile = window.profileManager ? window.profileManager.getSelectedProfile() : null;
+            const contextId = selectedProfile ? 
+                window.unifiedHistoryManager.getContextId(selectedProfile.filename) : 
+                'main';
+            
+            // Switch to the correct context
+            window.currentChatContextId = contextId;
+            window.unifiedHistoryManager.switchContext(contextId);
+            
+            console.log(`💬 ChatGPT app opening with context: ${contextId}`);
+            console.log(`📊 Messages in context: ${window.unifiedHistoryManager.getMessageCount(contextId)}`);
+            
+            // ✅ FIX: Restore conversation history when opening ChatGPT app
+            if (window.conversationHistory && window.conversationHistory.length > 0) {
+                // Clear existing messages first
+                screenContent.querySelectorAll('.message').forEach(msg => msg.remove());
+                
+                // Restore all messages from history
+                if (typeof restoreMessages === 'function') {
+                    await restoreMessages();
+                }
+            }
             
             // ✅ FIX: Scroll to bottom when opening ChatGPT app
             setTimeout(() => {
@@ -328,6 +354,7 @@ class NokiaAppManager {
         const categoriesWithSpecialItems = [
             ...this.settingsCategories,
             { id: 'system_info', icon: '⚙️', name: 'System Information' },
+            { id: 'change_pin', icon: '🔐', name: 'Change PIN Code' },
             { id: 'factory_reset', icon: '🗑️', name: 'Factory Reset' },
             { id: 'about', icon: 'ℹ️', name: 'About' }
         ];
@@ -345,6 +372,12 @@ class NokiaAppManager {
                     // A showSystemInfoDialog a nokia_app_handlers_utils.js-ben van definiálva
                     if (typeof showSystemInfoDialog === 'function') {
                         showSystemInfoDialog();
+                    }
+                    break;
+                case 'change_pin':
+                    // ✅ ÚJ: PIN kód megváltoztatása
+                    if (typeof handleChangePinCode === 'function') {
+                        handleChangePinCode();
                     }
                     break;
                 case 'factory_reset':
@@ -490,6 +523,10 @@ class NokiaAppManager {
         this.showDialog(dialog, this.games, async (game) => {
             if (game.id === 'doom') {
                 await this.launchDoom();
+            } else if (game.id === 'fs4') {
+                await this.launchFlightSim4();
+            } else if (game.id === 'frontier') {
+                await this.launchFrontier();
             } else if (game.id === 'snake') {
                 this.launchSnake();
             } else if (game.id === 'super_steve') {
@@ -631,7 +668,149 @@ class NokiaAppManager {
                 // === JAVÍTÁS VÉGE ===
             }
         }
-    }        
+    }     
+    
+async launchFlightSim4() {
+    console.log('=== 🛫 LAUNCH FLIGHT SIMULATOR 4.0 START ===');
+    console.log('Step 1: Checking if window.flightSimulator4Game exists:', !!window.flightSimulator4Game);
+    
+    if (window.flightSimulator4Game) {
+        console.log('Step 2: flightSimulator4Game found! Checking if already active...');
+        
+        if (window.flightSimulator4Game.isActive()) {
+            console.log('✈️ Flight Simulator 4.0 already active, bringing to foreground');
+            this.closeAllDialogs();
+        } else {
+            console.log('✈️ Starting NEW Flight Simulator 4.0 session');
+            console.log('Step 3: Closing all dialogs...');
+            this.closeAllDialogs();
+            
+            console.log('Step 4: Backing up original handlers...');
+            const originalHandlers = {
+                handleNavUp: window.handleNavUp,
+                handleNavDown: window.handleNavDown,
+                handleNavLeft: window.handleNavLeft,
+                handleNavRight: window.handleNavRight,
+                handleOK: window.handleOK,
+                handleMenu: window.handleMenu,
+                handleKey: window.handleKey,
+                handleCallStart: window.handleCallStart,
+                handleCallEnd: window.handleCallEnd,
+                handleClear: window.handleClear,
+                handleShift: window.handleShift,
+                handleHash: window.handleHash
+            };
+            console.log('✅ Original handlers backed up:', Object.keys(originalHandlers));
+            
+            console.log('Step 5: Wrapping deactivate function...');
+            const originalDeactivate = window.flightSimulator4Game.deactivate.bind(window.flightSimulator4Game);
+            const appManagerRef = this;
+            
+            window.flightSimulator4Game.deactivate = async function() {
+                console.log('🎮 FS4 deactivating, restoring controls and Games dialog...');
+                
+                await originalDeactivate();
+                console.log('✅ Original deactivate completed');
+                
+                Object.assign(window, originalHandlers);
+                console.log('✅ Global controls restored after FS4 exit');
+                
+                if (typeof initializeButtonListeners === 'function') {
+                    setTimeout(() => {
+                        initializeButtonListeners();
+                        console.log('✅ All button listeners re-initialized after FS4');
+                    }, 100);
+                }
+                
+                setTimeout(() => {
+                    appManagerRef.showGamesMenu();
+                    console.log('✅ Games dialog restored after FS4 exit');
+                }, 200);
+                
+                window.flightSimulator4Game.deactivate = originalDeactivate;
+            };
+            
+            console.log('Step 6: Calling activate()...');
+            window.flightSimulator4Game.activate();
+            console.log('✅ activate() called!');
+        }
+    } else {
+        console.error('❌ ERROR: window.flightSimulator4Game is NOT defined!');
+        console.error('This means fs4_game.js did not load or did not create the global instance.');
+    }
+    console.log('=== 🛫 LAUNCH FLIGHT SIMULATOR 4.0 END ===');
+}
+
+async launchFrontier() {
+    console.log('=== 🚀 LAUNCH FRONTIER: ELITE II START ===');
+    console.log('Step 1: Checking if window.frontierEliteGame exists:', !!window.frontierEliteGame);
+    
+    if (window.frontierEliteGame) {
+        console.log('Step 2: frontierEliteGame found! Checking if already active...');
+        
+        if (window.frontierEliteGame.isActive()) {
+            console.log('🚀 Frontier already active, bringing to foreground');
+            this.closeAllDialogs();
+        } else {
+            console.log('🚀 Starting NEW Frontier: Elite II session');
+            console.log('Step 3: Closing all dialogs...');
+            this.closeAllDialogs();
+            
+            console.log('Step 4: Backing up original handlers...');
+            const originalHandlers = {
+                handleNavUp: window.handleNavUp,
+                handleNavDown: window.handleNavDown,
+                handleNavLeft: window.handleNavLeft,
+                handleNavRight: window.handleNavRight,
+                handleOK: window.handleOK,
+                handleMenu: window.handleMenu,
+                handleKey: window.handleKey,
+                handleCallStart: window.handleCallStart,
+                handleCallEnd: window.handleCallEnd,
+                handleClear: window.handleClear,
+                handleShift: window.handleShift,
+                handleHash: window.handleHash
+            };
+            console.log('✅ Original handlers backed up:', Object.keys(originalHandlers));
+            
+            console.log('Step 5: Wrapping deactivate function...');
+            const originalDeactivate = window.frontierEliteGame.deactivate.bind(window.frontierEliteGame);
+            const appManagerRef = this;
+            
+            window.frontierEliteGame.deactivate = async function() {
+                console.log('🎮 Frontier deactivating, restoring controls and Games dialog...');
+                
+                await originalDeactivate();
+                console.log('✅ Original deactivate completed');
+                
+                Object.assign(window, originalHandlers);
+                console.log('✅ Global controls restored after Frontier exit');
+                
+                if (typeof initializeButtonListeners === 'function') {
+                    setTimeout(() => {
+                        initializeButtonListeners();
+                        console.log('✅ All button listeners re-initialized after Frontier');
+                    }, 100);
+                }
+                
+                setTimeout(() => {
+                    appManagerRef.showGamesMenu();
+                    console.log('✅ Games dialog restored after Frontier exit');
+                }, 200);
+                
+                window.frontierEliteGame.deactivate = originalDeactivate;
+            };
+            
+            console.log('Step 6: Calling activate()...');
+            window.frontierEliteGame.activate();
+            console.log('✅ activate() called!');
+        }
+    } else {
+        console.error('❌ ERROR: window.frontierEliteGame is NOT defined!');
+        console.error('This means frontier_game.js did not load or did not create the global instance.');
+    }
+    console.log('=== 🚀 LAUNCH FRONTIER: ELITE II END ===');
+}
 
     showCategoryDialog(title, items, onSelect) {
         const dialog = this.createDialog(title, 'category-dialog');

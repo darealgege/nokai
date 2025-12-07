@@ -1,0 +1,83 @@
+/**
+ * Frontier: Elite II Game Styles
+ * Replaces the screen content with Frontier
+ */
+
+/* Only apply styles when Frontier is active */
+.screen #frontier-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+}
+
+/* Dosbox canvas styling - fits Nokia screen (310x200) */
+.screen #frontier-container #frontier-dosbox {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    image-rendering: pixelated !important;
+    image-rendering: -moz-crisp-edges !important;
+    image-rendering: crisp-edges !important;
+    /* Monochrome Nokia LCD with better visibility */
+    filter: grayscale(100%) brightness(1.65) contrast(1.15);
+    display: block;
+}
+
+/* Loading/message overlay */
+.screen #frontier-container #frontier-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 58, 26, 0.95) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #1a3a1a !important;
+    z-index: 101;
+    padding: 10px;
+}
+
+.screen #frontier-container .frontier-message-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+    animation: frontierBlink 1s step-end infinite;
+    color: #1a3a1a !important;
+}
+
+.screen #frontier-container .frontier-message-text {
+    font-size: 10px;
+    text-align: center;
+    opacity: 0.8;
+    color: #1a3a1a !important;
+}
+
+@keyframes frontierBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+.dosbox-container {
+    position: relative;
+    min-width: fit-content !important;
+    min-height: 205px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

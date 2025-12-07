@@ -1078,6 +1078,15 @@ window.handleMenu = function() {
         window.doomEasterEgg.pressAndReleaseKey(window.doomEasterEgg.keyMap.esc);
         return; // FONTOS: Itt megállunk!
     }
+
+    if (window.frontierEliteGame && window.frontierEliteGame.isActive()) {        
+        return; // FONTOS: Itt megállunk!
+    }    
+
+    if (window.flightSimulator4Game && window.flightSimulator4Game.isActive()) {        
+        return; // FONTOS: Itt megállunk!
+    }        
+
     // ✅ Phone app - handle menu
     if (window.nokiaPhoneApp && window.nokiaPhoneApp.isActive) {
         if (window.nokiaPhoneApp.isCallDetailsOpen()) {
@@ -1542,10 +1551,7 @@ window.handleCallEnd = function() {
         closeChatGPTSettings();
         return;
     }
-    if (window.appManager && window.appManager.hasOpenDialog()) {
-        window.appManager.closeCurrentDialog();
-        return;
-    }
+
     if (isSystemInfoDialogOpen()) {
         closeSystemInfoDialog();
         return;
@@ -1554,7 +1560,12 @@ window.handleCallEnd = function() {
         closeAboutDialog();
         return;
     }
-    
+
+    if (window.appManager && window.appManager.hasOpenDialog()) {
+        window.appManager.closeCurrentDialog();
+        return;
+    }    
+
     // 4. PIN/SETUP KÉPERNYŐK KEZELÉSE
     if (window.pinScreen && window.pinScreen.isActive) {
         window.pinScreen.hide(); // A piros gomb megszakítja a PIN bevitelt
