@@ -1,8 +1,12 @@
 <?php
+// ✅ FIX: JSON float precision (prevents 0.8 → 0.7999999... issue)
+ini_set('serialize_precision', -1);
+ini_set('precision', 14);
+
 // CORS engedélyezése
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
 // Preflight request kezelése
@@ -80,18 +84,7 @@ if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
     $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
 }
 
-if ($authHeader && preg_match('/^Bearer\s+(sk-[a-zA-Z0-9]{20,})$/', $authHeader, $matches)) {
-    $apiKey = $matches[1];
-} else {
-    http_response_code(401);
-    // A hibaüzenet formátuma eltérő a két fájlban, azt hagyd változatlanul
-    // openaiProxy.php:
-    echo json_encode(['error' => 'API key is missing or invalid.']);
-    // realtime-session.php:
-    // echo json_encode(['error' => ['message' => 'API key is missing or invalid.', 'type' => 'auth_error']]);
-    exit;
-}
-if (preg_match('/^Bearer\s+(sk-[a-zA-Z0-9]{20,})$/', $authHeader, $matches)) {
+if ($authHeader && preg_match('/^Bearer\s+(sk-[a-zA-Z0-9_\-]{20,})$/', $authHeader, $matches)) {
     $apiKey = $matches[1];
 } else {
     http_response_code(401);

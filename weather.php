@@ -6,6 +6,10 @@
  * - Rate limit védelem
  */
 
+// ✅ FIX: JSON float precision (prevents excessive decimal places)
+ini_set('serialize_precision', -1);
+ini_set('precision', 14);
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
@@ -71,14 +75,24 @@ try {
     $nominatim_url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$latitude}&lon={$longitude}&accept-language=hu";
     
     // FONTOS: A Nominatim megköveteli az egyedi User-Agent fejlécet!
-    $context = stream_context_create([
-        'http' => [
-            'timeout' => 10,
-            'header' => "User-Agent: Nokia3310App/1.0 (your-email@example.com)\r\n" // Cseréld le a sajátodra!
+    $ch_geo = curl_init($nominatim_url);
+    curl_setopt_array($ch_geo, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => [
+            'User-Agent: Nokia3310App/1.0',
+            'Accept: application/json'
         ]
     ]);
-
-    $geocode_response = @file_get_contents($nominatim_url, false, $context);
+    $geocode_response = curl_exec($ch_geo);
+    $geo_curl_error = curl_error($ch_geo);
+    curl_close($ch_geo);
+    
+    if ($geo_curl_error) {
+        $geocode_response = FALSE;
+    }
 
     if ($geocode_response !== FALSE) {
         $geocode_data = json_decode($geocode_response, true);
@@ -116,10 +130,27 @@ try {
     ];
     
     $weather_url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query($weather_params);
-    $weather_response = @file_get_contents($weather_url, false, stream_context_create(['http' => ['timeout' => 10]]));
     
-    if ($weather_response === FALSE) {
-        throw new Exception("Failed to fetch weather data");
+    // cURL használata file_get_contents helyett (megbízhatóbb shared hostingon)
+    $ch_weather = curl_init($weather_url);
+    curl_setopt_array($ch_weather, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => ['Accept: application/json']
+    ]);
+    $weather_response = curl_exec($ch_weather);
+    $weather_http_code = curl_getinfo($ch_weather, CURLINFO_HTTP_CODE);
+    $weather_curl_error = curl_error($ch_weather);
+    curl_close($ch_weather);
+    
+    if ($weather_response === FALSE || $weather_curl_error) {
+        throw new Exception("Failed to fetch weather data: " . ($weather_curl_error ?: 'Unknown error'));
+    }
+    
+    if ($weather_http_code >= 400) {
+        throw new Exception("Weather API returned HTTP {$weather_http_code}");
     }
     
     $weather_data = json_decode($weather_response, true);
