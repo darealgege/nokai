@@ -118,7 +118,8 @@ try {
     // Input paraméterek (opcionális értékekkel)
     $model_map = [
         'gpt-realtime-mini' => 'gpt-realtime-mini',
-        'gpt-realtime' => 'gpt-realtime'
+        'gpt-realtime' => 'gpt-realtime',
+        'gpt-realtime-2' => 'gpt-realtime-2'
     ];
     $model = $model_map[$model_short] ?? 'gpt-realtime-mini'; // Alapértelmezett a mini
     $voice = $data['voice'] ?? 'alloy';
@@ -135,30 +136,50 @@ try {
         $voice = 'echo'; // Default to echo if invalid
     }
     
-    // API hívás payload az OpenAI Realtime Sessions endpoint-hoz
-    $apiPayload = [
-        'model' => $model,
-        'voice' => $voice,
-        'modalities' => ['text', 'audio'], // Explicitly enable both
-        'instructions' => $instructions,
-        'input_audio_transcription' => [
-            'model' => 'whisper-1'
-        ],
-        'turn_detection' => [
-            'type' => 'server_vad',
-            // Longer silence threshold for better language detection
-            'threshold' => 0.5,              // Default: 0.5 (voice activity sensitivity)
-            'prefix_padding_ms' => 300,      // Audio before speech starts
-            'silence_duration_ms' => 500     // Wait 500ms of silence before processing
-        ],
-        'temperature' => 0.8,  // Slightly lower for more consistent transcriptions
-        'max_response_output_tokens' => 4096
-    ];
+    // ✅ gpt-realtime-2 uses GA endpoint, older models use beta endpoint
+    if ($model === 'gpt-realtime-2') {
+        // GA endpoint: /v1/realtime/client_secrets
+        // NOTE: Only basic session config here. Advanced settings (VAD, transcription)
+        // are configured via session.update on the WebRTC data channel.
+        $apiUrl = 'https://api.openai.com/v1/realtime/client_secrets';
+        $apiPayload = [
+            'session' => [
+                'type' => 'realtime',
+                'model' => $model,
+                'instructions' => $instructions,
+                'audio' => [
+                    'output' => [
+                        'voice' => $voice
+                    ]
+                ]
+            ]
+        ];
+    } else {
+        // Beta endpoint: /v1/realtime/sessions (for gpt-realtime, gpt-realtime-mini)
+        $apiUrl = 'https://api.openai.com/v1/realtime/sessions';
+        $apiPayload = [
+            'model' => $model,
+            'voice' => $voice,
+            'modalities' => ['text', 'audio'],
+            'instructions' => $instructions,
+            'input_audio_transcription' => [
+                'model' => 'whisper-1'
+            ],
+            'turn_detection' => [
+                'type' => 'server_vad',
+                'threshold' => 0.5,
+                'prefix_padding_ms' => 300,
+                'silence_duration_ms' => 500
+            ],
+            'temperature' => 0.8,
+            'max_response_output_tokens' => 4096
+        ];
+    }
     
     $apiPayloadJson = json_encode($apiPayload);
     
     // cURL használata a jobb hibakezelés miatt
-    $ch = curl_init('https://api.openai.com/v1/realtime/sessions');
+    $ch = curl_init($apiUrl);
     
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,

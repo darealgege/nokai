@@ -473,7 +473,6 @@ window.startVoiceCallWithProfile = async function(profile) {
                         voiceHandler.dataChannel.send(JSON.stringify({
                             type: 'response.create',
                             response: {
-                                modalities: ['audio', 'text'],
                                 instructions: 'Briefly respond in the user\'s language with a natural phrase like “Egy pillanat, utánanézek, tartsd a vonalat…” or “One moment, please hold the line, I’ll check that for you…”, mentioning what you’re searching for (e.g. “Egy pillanat, tartsd a vonalat amíg utánanézek az időjárásnak.”). Keep it short, friendly, and topic-aware — do not give results yet; wait for the search results to arrive first.'
                             }
                         }));
@@ -512,10 +511,7 @@ window.startVoiceCallWithProfile = async function(profile) {
                         if (voiceHandler.dataChannel.readyState !== 'open') return;
                         
                         voiceHandler.dataChannel.send(JSON.stringify({
-                            type: 'response.create',
-                            response: {
-                                modalities: ['audio', 'text']
-                            }
+                            type: 'response.create'
                         }));
                         
                         if (searchProgressMessage && searchProgressMessage.parentNode) {
@@ -533,10 +529,7 @@ window.startVoiceCallWithProfile = async function(profile) {
                     console.log('🤖 Voice Decision: NO SEARCH needed.');
                     if (window.voiceHandler.dataChannel && window.voiceHandler.dataChannel.readyState === 'open') {
                         window.voiceHandler.dataChannel.send(JSON.stringify({
-                            type: 'response.create',
-                            response: {
-                                modalities: ['audio', 'text']
-                            }
+                            type: 'response.create'
                         }));
                     }
                 }
