@@ -130,51 +130,30 @@ try {
     
     $instructions = $data['instructions'] ?? "Current date and time: {$currentDateTime}. You are a helpful assistant on a Nokai phone. Keep responses concise and friendly. IMPORTANT: The user primarily speaks Hungarian (magyar nyelv). If you detect Hungarian speech, the transcription should also be in Hungarian. Always respond in the same language the user is speaking.";
     
-    // Támogatott hangok whitelist - ALL OpenAI voices
-    $allowed_voices = ['alloy', 'echo', 'shimmer', 'ash', 'ballad', 'coral', 'sage', 'verse', 'fable', 'onyx', 'nova'];
+    // Támogatott hangok whitelist - Realtime API hangok
+    // (fable, onyx, nova csak a TTS API-ban léteznek, Realtime-ban nem!)
+    $allowed_voices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'marin', 'cedar'];
     if (!in_array($voice, $allowed_voices)) {
         $voice = 'echo'; // Default to echo if invalid
     }
     
-    // ✅ gpt-realtime-2 uses GA endpoint, older models use beta endpoint
-    if ($model === 'gpt-realtime-2') {
-        // GA endpoint: /v1/realtime/client_secrets
-        // NOTE: Only basic session config here. Advanced settings (VAD, transcription)
-        // are configured via session.update on the WebRTC data channel.
-        $apiUrl = 'https://api.openai.com/v1/realtime/client_secrets';
-        $apiPayload = [
-            'session' => [
-                'type' => 'realtime',
-                'model' => $model,
-                'instructions' => $instructions,
-                'audio' => [
-                    'output' => [
-                        'voice' => $voice
-                    ]
+    // GA endpoint: /v1/realtime/client_secrets - minden modellhez
+    // (a béta /v1/realtime/sessions endpoint 2026.05.12-én megszűnt)
+    // NOTE: Only basic session config here. Advanced settings (VAD, transcription)
+    // are configured via session.update on the WebRTC data channel.
+    $apiUrl = 'https://api.openai.com/v1/realtime/client_secrets';
+    $apiPayload = [
+        'session' => [
+            'type' => 'realtime',
+            'model' => $model,
+            'instructions' => $instructions,
+            'audio' => [
+                'output' => [
+                    'voice' => $voice
                 ]
             ]
-        ];
-    } else {
-        // Beta endpoint: /v1/realtime/sessions (for gpt-realtime, gpt-realtime-mini)
-        $apiUrl = 'https://api.openai.com/v1/realtime/sessions';
-        $apiPayload = [
-            'model' => $model,
-            'voice' => $voice,
-            'modalities' => ['text', 'audio'],
-            'instructions' => $instructions,
-            'input_audio_transcription' => [
-                'model' => 'whisper-1'
-            ],
-            'turn_detection' => [
-                'type' => 'server_vad',
-                'threshold' => 0.5,
-                'prefix_padding_ms' => 300,
-                'silence_duration_ms' => 500
-            ],
-            'temperature' => 0.8,
-            'max_response_output_tokens' => 4096
-        ];
-    }
+        ]
+    ];
     
     $apiPayloadJson = json_encode($apiPayload);
     
