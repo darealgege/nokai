@@ -119,7 +119,9 @@ try {
     $model_map = [
         'gpt-realtime-mini' => 'gpt-realtime-mini',
         'gpt-realtime' => 'gpt-realtime',
-        'gpt-realtime-2' => 'gpt-realtime-2'
+        'gpt-realtime-2' => 'gpt-realtime-2',
+        'gpt-realtime-2.1-mini' => 'gpt-realtime-2.1-mini',
+        'gpt-realtime-2.1' => 'gpt-realtime-2.1'
     ];
     $model = $model_map[$model_short] ?? 'gpt-realtime-mini'; // Alapértelmezett a mini
     $voice = $data['voice'] ?? 'alloy';
