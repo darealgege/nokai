@@ -5,11 +5,26 @@
     "gpt-4.1-nano": { "input": 0.10, "output": 0.40, "unit": "per_1m_tokens" }
   },
   "voice_models": {
-    "gpt-realtime-mini": { "cost": 0.024, "unit": "per_minute" },
-    "gpt-realtime": { "cost": 0.048, "unit": "per_minute" },
-    "gpt-realtime-2": { "cost": 0.060, "unit": "per_minute" }
+    "gpt-realtime-mini": {
+      "text_input": 0.60, "text_cached_input": 0.06, "text_output": 2.40,
+      "audio_input": 10.00, "audio_cached_input": 0.30, "audio_output": 20.00,
+      "unit": "per_1m_tokens"
+    },
+    "gpt-realtime": {
+      "text_input": 4.00, "text_cached_input": 0.40, "text_output": 16.00,
+      "audio_input": 32.00, "audio_cached_input": 0.40, "audio_output": 64.00,
+      "unit": "per_1m_tokens"
+    },
+    "gpt-realtime-2": {
+      "text_input": 4.00, "text_cached_input": 0.40, "text_output": 24.00,
+      "audio_input": 32.00, "audio_cached_input": 0.40, "audio_output": 64.00,
+      "unit": "per_1m_tokens"
+    }
+  },
+  "transcription_models": {
+    "whisper-1": { "cost": 0.006, "unit": "per_minute" }
   },
   "vision_models": {
-    "gpt-4.1-nano": { "input": 0.10, "output": 0.40, "image_cost": 0.00145, "unit": "per_1m_tokens" }
+    "gpt-4.1-nano": { "input": 0.10, "output": 0.40, "unit": "per_1m_tokens" }
   }
 }
